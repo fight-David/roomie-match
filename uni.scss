@@ -1,0 +1,68 @@
+/* ============================================
+   Harmony · Design Tokens
+   此文件会被 uni-app 自动注入每个组件 <style>
+   规则：不要在这里 @import，直接定义变量
+   ============================================ */
+
+/* Primary — Dusty Green */
+$color-primary: #526253;
+$color-primary-soft: #8FA08E;
+$color-primary-ghost: #E4EAE3;
+
+/* Morandi neutrals */
+$color-paper: #F7FAF8;
+$color-whisper: #EEF2F0;
+$color-mist: #E8EDE9;
+$color-stone: #C9CAC2;
+
+/* Ink */
+$color-ink: #1C1E1C;
+$color-ink-soft: #6B6F6A;
+$color-ink-ghost: #A4A7A1;
+
+/* Red / Black list accents */
+$color-red-list: #A87063;
+$color-red-list-bg: #F2E6E2;
+$color-black-list: #3C3A37;
+$color-black-list-bg: #E7E6E2;
+
+/* Ambient shadow — unified per spec */
+$shadow-ambient-sm: 0 2rpx 12rpx rgba(143, 160, 142, 0.06);
+$shadow-ambient-md: 0 8rpx 40rpx rgba(143, 160, 142, 0.08);
+$shadow-ambient-lg: 0 16rpx 60rpx rgba(143, 160, 142, 0.12);
+
+/* 字体栈注意：不要在 uni.scss 里用 SCSS 变量保存 font-family 字符串，
+   因为 App.vue 在某些 uni-app Vue3 构建下拿不到。
+   字体统一用 .h-display / .h-body 两个全局 class（定义在 App.vue）。 */
+
+/* Radii — superellipse feel */
+$radius-sm: 12rpx;
+$radius-md: 32rpx;
+$radius-lg: 48rpx;
+$radius-xl: 72rpx;
+$radius-pill: 999rpx;
+
+/* Spacing */
+$space-1: 8rpx;
+$space-2: 16rpx;
+$space-3: 24rpx;
+$space-4: 32rpx;
+$space-5: 48rpx;
+$space-6: 64rpx;
+$space-7: 96rpx;
+
+/* Type */
+$font-display: 72rpx;
+$font-h1: 56rpx;
+$font-h2: 44rpx;
+$font-h3: 34rpx;
+$font-body: 28rpx;
+$font-sm: 24rpx;
+$font-xs: 20rpx;
+
+/* Motion */
+$ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+$dur-fast: 180ms;
+$dur-base: 320ms;
+$dur-slow: 620ms;
