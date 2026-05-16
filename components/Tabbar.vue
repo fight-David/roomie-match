@@ -1,12 +1,8 @@
 <template>
 	<view class="h-tabbar">
 		<view class="h-tabbar__inner">
-			<view
-				v-for="(t, i) in items"
-				:key="t.path"
-				class="h-tabbar__item"
-				:class="{ 'is-active': current === t.path }"
-				@tap="go(t)">
+			<view v-for="(t, i) in items" :key="t.path" class="h-tabbar__item"
+				:class="{ 'is-active': current === t.path }" @tap="go(t)">
 				<text class="h-tabbar__label">{{ t.label }}</text>
 				<view class="h-tabbar__dot" v-if="current === t.path"></view>
 			</view>
@@ -23,10 +19,10 @@ export default {
 	data() {
 		return {
 			items: [
-				{ path: 'discovery', label: 'Discover', url: '/pages/discovery/discovery' },
-				{ path: 'projects',  label: 'Projects', url: '/pages/projects/projects'   },
-				{ path: 'matches',   label: 'Matches',  url: '/pages/matches/matches'     },
-				{ path: 'me',        label: 'Me',       url: '/pages/me/me'               }
+				{ path: 'home', label: '首页', url: '/pages/home/index' },
+				{ path: 'post', label: '帖子', url: '/pages/post/index' },
+				{ path: 'message', label: '消息', url: '/pages/message/index' },
+				{ path: 'profile', label: '我', url: '/pages/profile/index' }
 			]
 		}
 	},
@@ -45,7 +41,9 @@ export default {
 <style lang="scss" scoped>
 .h-tabbar {
 	position: fixed;
-	left: 0; right: 0; bottom: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	background: rgba(255, 255, 255, 0.88);
 	backdrop-filter: blur(32rpx);
 	-webkit-backdrop-filter: blur(32rpx);

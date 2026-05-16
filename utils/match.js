@@ -12,13 +12,12 @@
 
 // 权重
 const WEIGHTS = {
-    gender: 20,
-    budget: 15,
+    budget: 20,
     district: 15,
-    subway: 10,
-    dims: 25,
+    subway: 15,
+    dims: 30,
     loves: 10,
-    limits: 5,
+    limits: 10,
 }
 
 /**
@@ -27,7 +26,6 @@ const WEIGHTS = {
 export function calcHarmony(currentUser, targetUser) {
     const reasons = []
 
-    const gender = calcGenderScore(currentUser, targetUser)
     const budget = calcBudgetScore(currentUser, targetUser)
     const district = calcDistrictScore(currentUser, targetUser)
     const subway = calcSubwayScore(currentUser, targetUser)
@@ -42,7 +40,6 @@ export function calcHarmony(currentUser, targetUser) {
     reasons.push(...dims.reasons)
 
     const total =
-        gender.score +
         budget.score +
         district.score +
         subway.score +
@@ -57,42 +54,46 @@ export function calcHarmony(currentUser, targetUser) {
 }
 
 /**
- * 性别匹配
- */
-function calcGenderScore(userA, userB) {
-    const score = WEIGHTS.gender
-
-    // 不限
-    if (
-        userA.target_gender === '不限' ||
-        userA.target_gender === userB.gender
-    ) {
-        return {
-            score,
-        }
-    }
-
-    return {
-        score: 0,
-    }
-}
-
-/**
  * 预算匹配
  */
 function calcBudgetScore(userA, userB) {
-    const overlap =
-        Math.min(userA.budget_max, userB.budget_max) -
-        Math.max(userA.budget_min, userB.budget_min)
 
-    if (overlap <= 0) {
+    const min = Math.max(
+        userA.budget_min,
+        userB.budget_min
+    )
+
+    const max = Math.min(
+        userA.budget_max,
+        userB.budget_max
+    )
+
+    // 没有交集
+    if (max <= min) {
         return {
             score: 0,
         }
     }
 
+    // overlap
+    const overlap = max - min
+
+    // 两人整体预算跨度
+    const totalRange =
+        Math.max(
+            userA.budget_max,
+            userB.budget_max
+        ) -
+        Math.min(
+            userA.budget_min,
+            userB.budget_min
+        )
+
+    // overlap ratio
+    const ratio = overlap / totalRange
+
     return {
-        score: WEIGHTS.budget,
+        score: WEIGHTS.budget * ratio,
     }
 }
 

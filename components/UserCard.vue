@@ -1,46 +1,53 @@
 <template>
-    <view :key="user.id" class="dis__card" :class="{ 'is-focus': focusId === user.id }" @tap="openProfile(p)">
+    <view class="dis__card" :class="{ 'is-focus': focused }" @tap="openProfile">
+        <!-- ===== 肖像区 ===== -->
         <view class="dis__portrait">
-            <image class="dis__img" :class="{ 'is-ken': focusId === user.id }" :src="user.cover" mode="aspectFill" />
+            <image class="dis__img" :class="{ 'is-ken': focused }" :src="user.cover" mode="aspectFill" />
             <view class="dis__mask"></view>
 
-            <view class="dis__ring">
-                <ring :value="user.harmony" :size="96" :stroke="2" tone="ghost" />
+                        <view v-if="harmony" class="dis__ring">
+                <ring :value="harmony" :size="96" :stroke="2" tone="ghost" />
             </view>
 
             <view class="dis__motto">
                 <text class="dis__motto-quote">"</text>
-                <text class="dis__motto-text">{{ user.motto }}</text>
+                <text class="dis__motto-text">{{ user.bio }}</text>
             </view>
         </view>
 
+        <!-- ===== 铭牌区 ===== -->
         <view class="dis__plate">
             <view class="dis__name-row">
-                <text class="dis__name h-display">{{ user.name }}</text>
-                <text class="dis__role">· {{ user.role }}</text>
+                <text class="dis__name h-display">{{ user.nickname }}</text>
+                <text class="dis__role"> 找{{ user.target_gender }}室友</text>
             </view>
             <view class="dis__tags">
-                <text class="dis__tag" v-for="t in personaOf(p)" :key="t">{{ t }}</text>
+                <text class="dis__tag" v-for="t in loves" :key="t">{{ t }}</text>
             </view>
             <view class="dis__meta-sub">
-                <text>{{ user.areas.join(' · ') }}　·　{{ user.budget }}</text>
+                <text>{{ user.target_districts.join(' · ') }} · ¥{{ user.budget_min }}-{{ user.budget_max }}</text>
             </view>
         </view>
     </view>
-
 </template>
 
 <script setup>
-import Ring from './Ring.vue';
-
+import Ring from './Ring.vue'
+import { computed } from 'vue'
 
 const props = defineProps({
-    user: Object
+    user: { type: Object, default: () => ({}) },
+    focused: { type: Boolean, default: false },
+    harmony: { type: Number, default: 0 }
 })
 
-const openProfile = (p) => {
-    // uni.navigateTo({ url: `/pages/profile-detail/profile-detail?id=${p.id}` })
-},
+const loves = computed(() => {
+    return (props.user.loves || []).slice(0, 4)
+})
+
+const openProfile = () => {
+    uni.navigateTo({ url: `/pages/profile-detail/index?id=${props.user.id}` })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -61,12 +68,11 @@ const openProfile = (p) => {
         }
     }
 
-    /* 80% 人物肖像区 */
+    /* 肖像区 */
     &__portrait {
         position: relative;
         width: 100%;
         aspect-ratio: 4 / 5;
-        height: 880rpx;
         border-radius: 36rpx;
         overflow: hidden;
         background: $color-mist;
@@ -115,7 +121,7 @@ const openProfile = (p) => {
         opacity: .45;
     }
 
-    /* 留白中的肖像铭牌 */
+    /* 铭牌区 */
     &__plate {
         padding: $space-3 $space-2 0;
     }
@@ -138,7 +144,6 @@ const openProfile = (p) => {
         color: $color-ink-soft;
     }
 
-    /* 人物画像胶囊 */
     &__tags {
         display: flex;
         flex-wrap: wrap;
@@ -156,26 +161,12 @@ const openProfile = (p) => {
         letter-spacing: 0.5rpx;
     }
 
-    &__dim {
-        font-size: $font-xs;
-        color: $color-ink-soft;
-        font-weight: 200;
-        letter-spacing: 2rpx;
-    }
-
-    &__dim-num {
-        color: $color-primary;
-        font-weight: 400;
-        margin-left: 4rpx;
-    }
-
     &__meta-sub {
         margin-top: $space-3;
         font-size: $font-xs;
         color: $color-ink-ghost;
         letter-spacing: 2rpx;
     }
-
 
 }
 </style>

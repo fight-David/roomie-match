@@ -35,6 +35,12 @@
 			"style": {
 				"navigationBarTitleText": "profile"
 			}
+		},
+		{
+			"path": "pages/profile-detail/index",
+			"style": {
+				"navigationBarTitleText": "profileDetail"
+			}
 		}
 	],
 	"globalStyle": {
