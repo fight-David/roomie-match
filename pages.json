@@ -24,6 +24,12 @@
 				"navigationBarTitleText": "post"
 			}
 		},
+			{
+			"path": "pages/post-detail/index",
+			"style": {
+				"navigationBarTitleText": "postDetail"
+			}
+		},
 		{
 			"path": "pages/message/index",
 			"style": {

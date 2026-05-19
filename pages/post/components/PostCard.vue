@@ -1,0 +1,173 @@
+<template>
+    <view class="pc" @tap="openDetail">
+        <view class="pc__head">
+            <view class="pc__type" :style="{ background: typeBg(j.postType), color: typeColor(j.postType) }">
+                <text class="pc__type-dot"></text>
+                <text>{{ typeLabel(j.postType) }}</text>
+            </view>
+            <view class="pc__head-right">
+                <text v-if="j.harmony" class="pc__harmony">{{ j.harmony }}%</text>
+                <text v-if="editable" class="pc__del" @tap.stop="remove">✕</text>
+            </view>
+        </view>
+
+        <view class="pc__body">
+            <view class="pc__author">
+                <text class="pc__author-name">{{ j.authorName }}</text>
+                <text class="pc__author-loc">{{ j.location }}</text>
+            </view>
+            <text class="pc__title h-display">{{ j.title }}</text>
+            <text class="pc__content">{{ j.content }}</text>
+
+            <view class="pc__tags">
+                <text class="pc__tag" v-for="t in j.tags" :key="t">{{ t }}</text>
+            </view>
+
+            <view v-if="j.budget" class="pc__foot">
+                <text>¥ {{ j.budget }} / 月 · {{ j.moveIn || '时间待定' }}</text>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script setup>
+import { POST_TYPES } from '@/sources/mock.js'
+
+const props = defineProps({
+    j: { type: Object, required: true },
+    editable: { type: Boolean, default: false }
+})
+
+const emit = defineEmits(['open', 'remove'])
+
+const typeLabel = (v) => POST_TYPES[v]?.label || '帖子'
+const typeColor = (v) => POST_TYPES[v]?.color || '#6B6F6A'
+const typeBg = (v) => {
+    const c = POST_TYPES[v]?.color || '#6B6F6A'
+    return c + '1A'
+}
+
+const openDetail = () => emit('open', props.j)
+const remove = () => emit('remove', props.j)
+</script>
+
+<style lang="scss" scoped>
+.pc {
+    background: #fff;
+    border-radius: 32rpx;
+    padding: $space-3;
+    margin-bottom: $space-3;
+    box-shadow: 0 4rpx 20rpx rgba(143, 160, 142, 0.08);
+    animation: h-fade-up .5s $ease-out-expo both;
+
+    &__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $space-2;
+    }
+
+    &__head-right {
+        display: flex;
+        align-items: center;
+        gap: 16rpx;
+    }
+
+    &__type {
+        display: inline-flex;
+        align-items: center;
+        gap: 8rpx;
+        padding: 6rpx 20rpx;
+        border-radius: 999rpx;
+        font-size: 20rpx;
+        letter-spacing: 1rpx;
+    }
+
+    &__type-dot {
+        width: 6rpx;
+        height: 6rpx;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    &__harmony {
+        color: #526253;
+        font-weight: 500;
+        font-size: 24rpx;
+    }
+
+    &__del {
+        font-size: 28rpx;
+        color: $color-ink-ghost;
+        font-weight: 200;
+        padding: 8rpx;
+    }
+
+    &__body {
+        padding: 0 $space-1;
+    }
+
+    &__author {
+        display: flex;
+        align-items: center;
+        gap: 12rpx;
+        margin-bottom: 8rpx;
+    }
+
+    &__author-name {
+        font-size: 22rpx;
+        color: $color-ink;
+        font-weight: 500;
+    }
+
+    &__author-loc {
+        font-size: 20rpx;
+        color: $color-ink-ghost;
+    }
+
+    &__title {
+        display: block;
+        font-size: 30rpx;
+        font-weight: 600;
+        line-height: 1.4;
+        color: $color-ink;
+        margin-bottom: 12rpx;
+    }
+
+    &__content {
+        display: block;
+        font-size: 24rpx;
+        color: $color-ink-soft;
+        line-height: 1.6;
+        letter-spacing: 0.3rpx;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    &__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10rpx;
+        margin-top: $space-2;
+    }
+
+    &__tag {
+        font-size: 20rpx;
+        color: $color-ink-soft;
+        background: $color-whisper;
+        padding: 4rpx 14rpx;
+        border-radius: 999rpx;
+    }
+
+    &__foot {
+        margin-top: $space-2;
+        font-size: 22rpx;
+        color: $color-ink-ghost;
+        letter-spacing: 0.5rpx;
+    }
+}
+</style>

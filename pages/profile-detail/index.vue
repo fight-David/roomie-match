@@ -4,79 +4,221 @@
         <view class="pfd__nav h-safe-top">
             <view class="pfd__nav-bar">
                 <text class="pfd__nav-back" @tap="back">‹</text>
-                <text class="pfd__nav-title h-display">{{ user.nickname }}</text>
-                <text class="pfd__nav-share" @tap="share">↗</text>
+                <text class="pfd__nav-title">{{ isEditMode ? '编辑个人资料' : user.nickname }}</text>
+                <text class="pfd__nav-action" @tap="isEditMode ? saveProfile() : share()">
+                    {{ isEditMode ? '保存' : '↗' }}
+                </text>
             </view>
         </view>
 
-        <!-- ===== Hero ===== -->
-        <HeroBanner :user="user" />
+        <!-- ===== 照片画廊 ===== -->
+        <PhotoGallery
+            :photos="allPhotos"
+            :editable="isEditMode"
+            @add-photo="addPhoto"
+            @remove-photo="removePhoto"
+        />
 
         <!-- ===== Body ===== -->
         <view class="pfd__body">
-            <RadarCard :dims="user.dims" />
-            <TagLists :loves="user.loves" :limits="user.limits" />
-            <BioCard :bio="user.bio" :user="user" />
+
+            <!-- ── 编辑模式 ── -->
+            <template v-if="isEditMode">
+                                <!-- 昵称 / 简介 -->
+                <view class="pfd__section">
+                    <InlineEditor name="nickname" label="昵称" v-model="user.nickname" placeholder="输入昵称"
+                        type="text" :maxlength="20" :active-name="activeField"
+                        @start-edit="activeField = $event" @save="onSave" />
+                    <InlineEditor name="bio" label="简介" v-model="user.bio" placeholder="写一段自我介绍…"
+                        type="textarea" :maxlength="200" :active-name="activeField"
+                        @start-edit="activeField = $event" @save="onSave" />
+                </view>
+
+                <!-- 性别 / 目标 -->
+                <view class="pfd__section">
+                    <InlineEditor name="gender" label="我的性别" v-model="user.gender" placeholder="选择性别"
+                        type="gender" :active-name="activeField"
+                        @start-edit="activeField = $event" @save="onSave" />
+                    <InlineEditor name="target_gender" label="寻找" v-model="user.target_gender" placeholder="不限"
+                        type="target_gender" :active-name="activeField"
+                        @start-edit="activeField = $event" @save="onSave" />
+                </view>
+
+                <!-- 预算 / 区域 -->
+                <view class="pfd__section">
+                    <InlineEditor name="budget" label="预算" :model-value="{ budget_min: user.budget_min, budget_max: user.budget_max }"
+                        placeholder="设置预算" type="budget" :active-name="activeField"
+                        @start-edit="activeField = $event"
+                        @update:model-value="onBudgetUpdate" @save="onSave" />
+                    <InlineEditor name="districts" label="区域" v-model="user.target_districts" placeholder="选择区域"
+                        type="text" :active-name="activeField"
+                        @start-edit="activeField = $event" @save="onSave" />
+                    <InlineEditor name="subways" label="地铁" v-model="user.target_subways" placeholder="选择地铁线"
+                        type="text" :active-name="activeField"
+                        @start-edit="activeField = $event" @save="onSave" />
+                </view>
+
+                <!-- 维度滑块 -->
+                <DimSlider :dims="user.dims" @update:dims="onDimsUpdate" />
+
+                                <!-- 标签 -->
+                <EditTags
+                    :loves="user.loves"
+                    :limits="user.limits"
+                    @update:loves="val => user.loves = val"
+                    @update:limits="val => user.limits = val"
+                />
+            </template>
+
+            <!-- ── 查看模式 ── -->
+            <template v-else>
+                <RadarCard :dims="user.dims" />
+                <TagLists :loves="user.loves" :limits="user.limits" />
+                <BioCard :bio="user.bio" :user="user" />
+            </template>
+
         </view>
 
-        <!-- ===== Bottom Actions ===== -->
+        <!-- ===== Bottom ===== -->
         <view class="pfd__bottom">
             <view class="pfd__bottom-inner h-safe-bottom">
-                <view class="pfd__btn pfd__btn--ghost" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="save">
-                    <text class="pfd__btn-icon">☌</text>
-                    <text>收藏</text>
-                </view>
-                <view class="pfd__btn pfd__btn--solid" hover-class="pfd__btn--press" :hover-stay-time="80"
-                    @tap="interested">
-                    <text class="pfd__btn-icon">⚡</text>
-                    <text>感兴趣</text>
-                </view>
+                <template v-if="isEditMode">
+                    <view class="pfd__btn pfd__btn--ghost" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="discard">
+                        <text>放弃</text>
+                    </view>
+                    <view class="pfd__btn pfd__btn--solid" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="saveProfile">
+                        <text>保存</text>
+                    </view>
+                </template>
+                <template v-else>
+                    <view class="pfd__btn pfd__btn--ghost" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="save">
+                        <text class="pfd__btn-icon">☌</text>
+                        <text>收藏</text>
+                    </view>
+                    <view class="pfd__btn pfd__btn--solid" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="interested">
+                        <text class="pfd__btn-icon">⚡</text>
+                        <text>感兴趣</text>
+                    </view>
+                </template>
             </view>
         </view>
     </view>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { PEOPLE } from '@/sources/mock.js'
-import HeroBanner from './components/HeroBanner.vue'
+import { useUserStore } from '@/stores/user'
+import PhotoGallery from './components/PhotoGallery.vue'
+import InlineEditor from './components/InlineEditor.vue'
+import DimSlider from './components/DimSlider.vue'
+import EditTags from './components/EditTags.vue'
 import RadarCard from './components/RadarCard.vue'
 import TagLists from './components/TagLists.vue'
 import BioCard from './components/BioCard.vue'
 
+const userStore = useUserStore()
 const user = ref({})
+const mode = ref('view')
 
-onLoad((query) => {
-    const id = query?.id || ''
-    const found = PEOPLE.find(p => p.id === id)
-    if (found) user.value = found
+const isEditMode = computed(() => mode.value === 'edit')
+
+// 将 cover 作为 photos 第一张合并展示
+const allPhotos = computed(() => {
+    if (!user.value?.photos?.length && !user.value?.cover) return []
+    const list = user.value.cover ? [user.value.cover, ...(user.value.photos || [])] : [...(user.value.photos || [])]
+    // 去重
+    return [...new Set(list)]
 })
 
+onLoad((query) => {
+    if (query?.mode === 'edit') {
+        mode.value = 'edit'
+        user.value = JSON.parse(JSON.stringify(userStore.profile))
+    } else if (query?.id) {
+        const found = PEOPLE.find(p => p.id === query.id)
+        if (found) user.value = found
+    }
+})
+
+const activeField = ref('')
+
+// ——— 通用操作 ———
 const back = () => uni.navigateBack()
-const share = () => {
-    uni.showToast({ title: '分享功能即将上线', icon: 'none' })
+const share = () => uni.showToast({ title: '分享功能即将上线', icon: 'none' })
+const save = () => uni.showToast({ title: '已收藏', icon: 'none' })
+const interested = () => uni.showToast({ title: '已发送意向', icon: 'none' })
+
+// ——— 编辑保存 ———
+const saveProfile = () => {
+    // 确保 cover 和 photos 同步
+    if (allPhotos.value.length > 0) {
+        user.value.cover = allPhotos.value[0]
+        user.value.photos = allPhotos.value.slice(1)
+    }
+    userStore.setProfile({ ...user.value })
+    uni.showToast({ title: '已保存', icon: 'success' })
+    setTimeout(() => uni.navigateBack(), 600)
 }
-const save = () => {
-    uni.showToast({ title: '已收藏', icon: 'none' })
+
+const discard = () => uni.navigateBack()
+
+// ——— 字段编辑 ———
+const onSave = () => {
+    // InlineEditor emit save 后自动更新了 v-model，无需额外处理
 }
-const interested = () => {
-    uni.showToast({ title: '已发送意向', icon: 'none' })
+
+const onBudgetUpdate = (val) => {
+    user.value.budget_min = val.budget_min || user.value.budget_min
+    user.value.budget_max = val.budget_max || user.value.budget_max
+}
+
+const onDimsUpdate = (dims) => {
+    user.value.dims = { ...dims }
+}
+
+// ——— 照片操作 ———
+const addPhoto = () => {
+    uni.chooseImage({
+        count: 1,
+        success: (res) => {
+            const tempPath = res.tempFilePaths[0]
+            if (!user.value.photos) user.value.photos = []
+            user.value.photos.push(tempPath)
+            // 如果还没有 cover，把第一张设为 cover
+            if (!user.value.cover) {
+                user.value.cover = tempPath
+            }
+        }
+    })
+}
+
+const removePhoto = (index) => {
+    const list = [...allPhotos.value]
+    list.splice(index, 1)
+    // 更新 cover 和 photos
+    if (list.length > 0) {
+        user.value.cover = list[0]
+        user.value.photos = list.slice(1)
+    } else {
+        user.value.cover = ''
+        user.value.photos = []
+    }
 }
 </script>
 
 <style lang="scss" scoped>
 .pfd {
     min-height: 100vh;
-    background: #F3F5F2;
+    background: #EDF0EC;
     padding-bottom: 240rpx;
 
-    /* ---------- Nav ---------- */
     &__nav {
         position: sticky;
         top: 0;
         z-index: 10;
-        background: #F3F5F2;
+        background: #EDF0EC;
     }
 
     &__nav-bar {
@@ -99,36 +241,44 @@ const interested = () => {
     &__nav-title {
         flex: 1;
         text-align: center;
-        font-size: 32rpx;
-        font-weight: 500;
+        font-size: 28rpx;
+        font-weight: 450;
         letter-spacing: 0.5rpx;
         color: $color-ink;
     }
 
-    &__nav-share {
+    &__nav-action {
         width: 64rpx;
         height: 88rpx;
         line-height: 88rpx;
         text-align: right;
-        font-size: 36rpx;
-        color: $color-ink;
+        font-size: 28rpx;
+        color: $color-primary;
+        font-weight: 500;
     }
 
-    /* ---------- Body ---------- */
     &__body {
         padding: $space-3;
         display: flex;
         flex-direction: column;
-        gap: $space-3;
+        gap: 16rpx;
     }
 
-    /* ---------- Bottom ---------- */
+    &__section {
+        display: flex;
+        flex-direction: column;
+        gap: 2rpx;
+        background: #EDF0EC;
+        border-radius: 24rpx;
+        overflow: hidden;
+    }
+
     &__bottom {
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(180deg, rgba(243, 245, 242, 0), #F3F5F2 40%);
+        background: linear-gradient(180deg, rgba(237, 240, 236, 0), #EDF0EC 40%);
         padding-top: $space-5;
     }
 
