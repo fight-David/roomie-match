@@ -14,14 +14,43 @@
                 <text class="me__hero-badge">{{ profile.gender || '' }}</text>
                 <text class="me__hero-badge" v-if="profile.age">{{ profile.age }}</text>
             </view>
+
+            <!-- 关注数据入口 -->
+            <view class="me__hero-stats">
+                <view class="me__hero-stat" @tap="$emit('openFollow', 'mutual')">
+                    <text class="me__hero-stat-num">{{ stats.mutual }}</text>
+                    <text class="me__hero-stat-label">室友</text>
+                </view>
+                <view class="me__hero-stat" @tap="$emit('openFollow', 'following')">
+                    <text class="me__hero-stat-num">{{ stats.following }}</text>
+                    <text class="me__hero-stat-label">关注</text>
+                </view>
+                <view class="me__hero-stat" @tap="$emit('openFollow', 'followers')">
+                    <text class="me__hero-stat-num">{{ stats.followers }}</text>
+                    <text class="me__hero-stat-label">粉丝</text>
+                </view>
+            </view>
         </view>
     </view>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useFollowStore } from '@/stores/follow'
+
 defineProps({
     profile: { type: Object, default: () => ({}) }
 })
+
+defineEmits(['openFollow'])
+
+const followStore = useFollowStore()
+
+const stats = computed(() => ({
+    mutual: followStore.mutualList.length,
+    following: followStore.followingList.length,
+    followers: followStore.followersList.length
+}))
 </script>
 
 <style lang="scss" scoped>
@@ -105,6 +134,7 @@ defineProps({
         display: flex;
         gap: 12rpx;
         margin-top: 4rpx;
+        margin-bottom: $space-3;
     }
 
     &__hero-badge {
@@ -117,6 +147,32 @@ defineProps({
         font-size: 20rpx;
         letter-spacing: 1rpx;
         font-weight: 400;
+    }
+
+    &__hero-stats {
+        display: flex;
+        gap: $space-5;
+        margin-top: $space-1;
+    }
+
+    &__hero-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rpx;
+    }
+
+    &__hero-stat-num {
+        font-size: 32rpx;
+        font-weight: 500;
+        color: #fff;
+        letter-spacing: 0.5rpx;
+    }
+
+    &__hero-stat-label {
+        font-size: 20rpx;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 1rpx;
     }
 }
 </style>

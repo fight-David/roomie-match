@@ -1,6 +1,6 @@
 <template>
     <view class="me">
-        <CoverHero :profile="profile" />
+        <CoverHero :profile="profile" @open-follow="openFollow" />
 
         <view class="me__body">
             <ActionMenu
@@ -30,6 +30,10 @@ const userStore = useUserStore()
 
 const profile = computed(() => userStore.profile)
 const isLoggedIn = computed(() => !!userStore.userInfo)
+
+const openFollow = (tab) => {
+    uni.navigateTo({ url: `/pages/follow/index?tab=${tab}` })
+}
 
 const editProfile = () => {
     uni.navigateTo({ url: '/pages/profile-detail/index?mode=edit' })

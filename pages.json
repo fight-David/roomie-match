@@ -24,7 +24,7 @@
 				"navigationBarTitleText": "post"
 			}
 		},
-			{
+		{
 			"path": "pages/post-detail/index",
 			"style": {
 				"navigationBarTitleText": "postDetail"
@@ -46,6 +46,12 @@
 			"path": "pages/profile-detail/index",
 			"style": {
 				"navigationBarTitleText": "profileDetail"
+			}
+		},
+		{
+			"path": "pages/follow/index",
+			"style": {
+				"navigationBarTitleText": "follow"
 			}
 		}
 	],

@@ -90,15 +90,13 @@
                         <text>保存</text>
                     </view>
                 </template>
-                <template v-else>
-                    <view class="pfd__btn pfd__btn--ghost" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="save">
-                        <text class="pfd__btn-icon">☌</text>
-                        <text>收藏</text>
-                    </view>
-                    <view class="pfd__btn pfd__btn--solid" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="interested">
-                        <text class="pfd__btn-icon">⚡</text>
-                        <text>感兴趣</text>
-                    </view>
+                                <template v-else>
+                    <FollowButton :user-id="user.id" />
+                    <ChatButton
+                        :user-id="user.id"
+                        :user-name="user.nickname"
+                        :user-avatar="user.cover"
+                    />
                 </template>
             </view>
         </view>
@@ -117,6 +115,8 @@ import EditTags from './components/EditTags.vue'
 import RadarCard from './components/RadarCard.vue'
 import TagLists from './components/TagLists.vue'
 import BioCard from './components/BioCard.vue'
+import FollowButton from './components/FollowButton.vue'
+import ChatButton from './components/ChatButton.vue'
 
 const userStore = useUserStore()
 const user = ref({})
@@ -147,8 +147,6 @@ const activeField = ref('')
 // ——— 通用操作 ———
 const back = () => uni.navigateBack()
 const share = () => uni.showToast({ title: '分享功能即将上线', icon: 'none' })
-const save = () => uni.showToast({ title: '已收藏', icon: 'none' })
-const interested = () => uni.showToast({ title: '已发送意向', icon: 'none' })
 
 // ——— 编辑保存 ———
 const saveProfile = () => {

@@ -3,7 +3,7 @@
         <!-- 搜索 -->
         <view class="pf__search">
             <text class="pf__search-icon">⌕</text>
-            <input class="pf__search-input" v-model="keyword" placeholder="你在找一个什么样的人？"
+            <input class="pf__search-input" v-model="keyword" placeholder="你在找一个什么样的？"
                 placeholder-class="pf__search-ph" confirm-type="search" @input="onInput" @confirm="search" />
             <text v-if="keyword" class="pf__search-clear" @tap="clear">×</text>
         </view>
@@ -98,9 +98,10 @@ defineExpose({ setResultCount })
     }
 
     &__search-icon {
-        font-size: 36rpx;
+        font-size: 56rpx;
         color: $color-ink-soft;
         margin-right: $space-2;
+        margin-bottom: $space-2;
     }
 
     &__search-input {
