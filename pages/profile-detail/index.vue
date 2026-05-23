@@ -107,6 +107,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { PEOPLE } from '@/sources/mock.js'
+import { findPerson } from '@/api/db.js'
 import { useUserStore } from '@/stores/user'
 import PhotoGallery from './components/PhotoGallery.vue'
 import InlineEditor from './components/InlineEditor.vue'
@@ -124,21 +125,27 @@ const mode = ref('view')
 
 const isEditMode = computed(() => mode.value === 'edit')
 
-// 将 cover 作为 photos 第一张合并展示
 const allPhotos = computed(() => {
     if (!user.value?.photos?.length && !user.value?.cover) return []
     const list = user.value.cover ? [user.value.cover, ...(user.value.photos || [])] : [...(user.value.photos || [])]
-    // 去重
     return [...new Set(list)]
 })
 
-onLoad((query) => {
+onLoad(async (query) => {
     if (query?.mode === 'edit') {
         mode.value = 'edit'
         user.value = JSON.parse(JSON.stringify(userStore.profile))
     } else if (query?.id) {
-        const found = PEOPLE.find(p => p.id === query.id)
-        if (found) user.value = found
+        try {
+            const found = await findPerson(query.id)
+            if (found) {
+                user.value = found
+            } else {
+                user.value = PEOPLE.find(p => p.id === query.id) || {}
+            }
+        } catch (e) {
+            user.value = PEOPLE.find(p => p.id === query.id) || {}
+        }
     }
 })
 
@@ -149,13 +156,17 @@ const back = () => uni.navigateBack()
 const share = () => uni.showToast({ title: '分享功能即将上线', icon: 'none' })
 
 // ——— 编辑保存 ———
-const saveProfile = () => {
+const saveProfile = async () => {
     // 确保 cover 和 photos 同步
     if (allPhotos.value.length > 0) {
         user.value.cover = allPhotos.value[0]
         user.value.photos = allPhotos.value.slice(1)
     }
     userStore.setProfile({ ...user.value })
+
+    // 同步到云端
+    await userStore.saveProfile()
+
     uni.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => uni.navigateBack(), 600)
 }

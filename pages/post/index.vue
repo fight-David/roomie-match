@@ -40,8 +40,9 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
-import { PROJECTS } from '@/sources/mock.js'
+import { ref, computed, reactive, onMounted } from 'vue'
+import { PROJECTS as MOCK_PROJECTS } from '@/sources/mock.js'
+import { fetchProjects } from '@/api/db.js'
 import { useUserStore } from '@/stores/user'
 import PostCard from './components/PostCard.vue'
 import PostFilters from './components/PostFilters.vue'
@@ -51,11 +52,25 @@ import Tabbar from '@/components/Tabbar.vue'
 const userStore = useUserStore()
 const filtersRef = ref(null)
 const modalOpen = ref(false)
+const posts = ref([])
 
 const currentUserId = computed(() => userStore.profile?.id || 'p01')
 
-// 本地可变帖子列表
-const posts = ref([...PROJECTS])
+const loadPosts = async () => {
+    try {
+        const data = await fetchProjects()
+        if (data && data.length) {
+            posts.value = data
+        } else {
+            posts.value = [...MOCK_PROJECTS]
+        }
+    } catch (e) {
+        console.warn('云数据库读取失败，使用 mock 数据', e)
+        posts.value = [...MOCK_PROJECTS]
+    }
+}
+
+onMounted(loadPosts)
 
 // 筛选状态
 const filterState = reactive({
@@ -106,23 +121,52 @@ const openProject = (j) => {
     uni.navigateTo({ url: `/pages/post-detail/index?id=${j.id}` })
 }
 
-const removePost = (j) => {
+const removePost = async (j) => {
+    // 先从本地移除
     const idx = posts.value.findIndex(p => p.id === j.id)
     if (idx >= 0) posts.value.splice(idx, 1)
+
+    // 同步到云端
+    try {
+        await uniCloud.callFunction({
+            name: 'post-op',
+            data: { action: 'delete', postId: j.id }
+        })
+    } catch (e) {
+        console.warn('删除同步失败', e)
+    }
 }
 
-const submitPost = (formData) => {
+const submitPost = async (formData) => {
     const newPost = {
-        id: 'j' + Date.now(),
         authorId: currentUserId.value,
         authorName: userStore.profile?.nickname || '我',
         harmony: 100,
         cover: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=900&q=70&auto=format',
         ...formData
     }
-    posts.value.unshift(newPost)
-    modalOpen.value = false
-    uni.showToast({ title: '已发布', icon: 'success' })
+
+    try {
+        const res = await uniCloud.callFunction({
+            name: 'post-op',
+            data: { action: 'create', post: newPost }
+        })
+
+        if (res.result.code === 0) {
+            posts.value.unshift(res.result.data)
+            modalOpen.value = false
+            uni.showToast({ title: '已发布', icon: 'success' })
+        }
+    } catch (e) {
+        // 本地保底
+        const fallback = {
+            id: 'j' + Date.now(),
+            ...newPost
+        }
+        posts.value.unshift(fallback)
+        modalOpen.value = false
+        uni.showToast({ title: '已发布（本地）', icon: 'success' })
+    }
 }
 </script>
 

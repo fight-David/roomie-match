@@ -1,45 +1,21 @@
 import { defineStore } from 'pinia'
+import { PEOPLE as MOCK_PEOPLE } from '@/sources/mock.js'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    userInfo: null,
+    userInfo: null,     // { uid, token } — 登录后才有
+    token: '',
+    uid: '',
 
-    // profile: {
-    //   "cover": '',
-    //   "photos": [],
-    //   "nickname": "",
-    //   "age": '',
-    //   "gender": '',
-    //   "bio": "",
-
-    //   "target_gender": null,
-
-    //   "budget_min": 3000,
-    //   "budget_max": 6500,
-
-    //   "target_districts": [],
-    //   "target_subways": [],
-
-    //   dims: {
-    //     "schedule": 3,             // 1. 作息 (早起鸟 vs 夜猫子)
-    //     "tidy": 3,             // 2. 整洁 (随性邋遢 vs 强迫症)
-    //     "social": 3,            // 3. 社交 (抗拒外人 vs 喜欢聚会)
-    //     "noise": 3,             // 4. 声响 (耳机党 vs 外放连麦)
-    //     "finance": 3,           // 5. 财务 (锱铢必较 vs 差不多就行)
-    //     "pets_vibe": 3,
-    //   },
-
-    //   "loves": [],
-    //   "limits": []
-    // }
-
+    // profile 初始用 mock 数据保底
     profile: {
+      id: 'p01',
       nickname: 'Ethan Wu',
       target_gender: '男',
       budget_min: 2000,
       budget_max: 4400,
-      "age": '',
-      "gender": '男',
+      age: '',
+      gender: '男',
       bio: '下班会去打球，也会认真做饭。',
       target_districts: ['徐汇', '闵行'],
       target_subways: ['1', '11'],
@@ -59,8 +35,11 @@ export const useUserStore = defineStore('user', {
       loves: ['篮球', '健身', '做饭', 'Citywalk'],
       limits: ['太邋遢', '冷暴力'],
     }
-
   }),
+
+  getters: {
+    isLoggedIn: (state) => !!state.token
+  },
 
   actions: {
     setProfile(data) {
@@ -68,7 +47,74 @@ export const useUserStore = defineStore('user', {
         ...this.profile,
         ...data
       }
-      console.log(this.profile);
+    },
+
+    async login() {
+      return new Promise((resolve, reject) => {
+        // #ifdef MP-WEIXIN
+        uni.login({
+          provider: 'weixin',
+          success: async (loginRes) => {
+            try {
+              const cloudRes = await uniCloud.callFunction({
+                name: 'login',
+                data: {
+                  action: 'login',
+                  code: loginRes.code
+                }
+              })
+
+              const result = cloudRes.result
+              if (result.code === 0) {
+                this.token = result.data.token
+                this.uid = result.data.uid
+
+                if (result.data.profile) {
+                  this.profile = {
+                    ...this.profile,
+                    ...result.data.profile,
+                    id: result.data.uid
+                  }
+                }
+
+                resolve(result.data)
+              } else {
+                reject(new Error(result.message || '登录失败'))
+              }
+            } catch (e) {
+              reject(e)
+            }
+          },
+          fail: (e) => reject(e)
+        })
+        // #endif
+
+        // #ifndef MP-WEIXIN
+        // 非微信环境直接用 mock
+        this.token = 'mock-token'
+        this.uid = 'p01'
+        this.profile = {
+          ...this.profile,
+          id: 'p01'
+        }
+        resolve({ isNewUser: false, profile: this.profile })
+        // #endif
+      })
+    },
+
+        async saveProfile() {
+      try {
+        await uniCloud.callFunction({
+          name: 'login',
+          data: {
+            action: 'saveProfile',
+            uid: this.uid || 'p01',
+            profile: this.profile
+          }
+        })
+      } catch (e) {
+        console.warn('保存资料失败', e)
+      }
     }
   }
 })

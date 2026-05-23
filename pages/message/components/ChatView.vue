@@ -6,20 +6,20 @@
             <text class="cv__name">{{ conversation.peerName }}</text>
         </view>
 
-        <scroll-view scroll-y class="cv__body" :scroll-into-view="scrollId" scroll-with-animation>
+        <scroll-view scroll-y class="cv__body" :scroll-top="scrollTop" scroll-with-animation @scroll="onScroll">
             <view v-for="(m, i) in conversation.messages" :key="i" class="cv__msg"
-                :class="{ 'is-me': m.from === 'me' }" :id="'msg-' + i">
+                :class="{ 'is-me': m.from === 'me' }">
                 <view class="cv__bubble">
                     <text>{{ m.text }}</text>
                 </view>
                 <text class="cv__time">{{ m.time }}</text>
             </view>
-            <view id="cv__bottom"></view>
+            <view style="height:1rpx;"></view>
         </scroll-view>
 
         <view class="cv__foot h-safe-bottom">
             <view class="cv__input">
-                <input v-model="text" placeholder="说点什么…" placeholder-class="cv__ph"
+                <input ref="inputRef" v-model="text" placeholder="说点什么…" placeholder-class="cv__ph"
                     confirm-type="send" @confirm="send" />
             </view>
             <view class="cv__send" :class="{ 'is-on': !!text }" @tap="send">
@@ -39,19 +39,36 @@ const props = defineProps({
 const emit = defineEmits(['close', 'send'])
 
 const text = ref('')
-const scrollId = ref('cv__bottom')
+const scrollTop = ref(0)
+const inputRef = ref(null)
 
 const scrollToBottom = () => {
-    nextTick(() => { scrollId.value = 'cv__bottom' })
+    scrollTop.value = 0
+    nextTick(() => {
+        scrollTop.value = 999999
+    })
 }
 
-watch(() => props.conversation?.messages?.length, scrollToBottom, { immediate: true })
+const onScroll = (e) => {
+    // 不做特殊处理
+}
+
+// 初次进入和消息变化时都滚到底部
+// 用 immediate + 延迟确保 DOM 已渲染
+watch(() => props.conversation?.messages?.length, () => {
+    setTimeout(scrollToBottom, 100)
+}, { immediate: true })
 
 const send = () => {
     if (!text.value) return
     emit('send', text.value)
     text.value = ''
     scrollToBottom()
+    // 聚焦输入框
+    nextTick(() => {
+        const el = document.querySelector('.cv__input input')
+        if (el) el.focus()
+    })
 }
 </script>
 
@@ -68,7 +85,7 @@ const send = () => {
         display: flex;
         align-items: center;
         gap: $space-2;
-        padding: 80rpx $space-4 $space-2;
+        padding: 20rpx $space-4 $space-2;
         border-bottom: 1rpx solid rgba(28, 30, 28, 0.04);
     }
 
@@ -126,7 +143,7 @@ const send = () => {
         color: $color-ink;
         line-height: 1.5;
         letter-spacing: 0.3rpx;
-        border-bottom-left-radius: 4rpx;
+        // border-bottom-left-radius: 4rpx;
     }
 
     &__time {

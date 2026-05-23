@@ -1,0 +1,6 @@
+{
+  "name": "post-op",
+  "version": "1.0.0",
+  "description": "帖子操作（发布/删除/列表）",
+  "main": "index.js"
+}

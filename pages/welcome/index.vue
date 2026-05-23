@@ -38,8 +38,36 @@
 </template>
 
 <script setup>
-const goOnboarding = () => {
-    uni.reLaunch({ url: '/pages/onboarding/index' })
+import { useUserStore } from '@/stores/user'
+import { useMessageStore } from '@/stores/message'
+import { useFollowStore } from '@/stores/follow'
+
+const userStore = useUserStore()
+const messageStore = useMessageStore()
+const followStore = useFollowStore()
+
+const goOnboarding = async () => {
+    uni.showLoading({ title: '登录中...', mask: true })
+
+    try {
+        const result = await userStore.login()
+
+        // 加载关系数据
+        await Promise.all([
+            messageStore.loadConversations(),
+            followStore.loadRelations()
+        ])
+
+        if (result.isNewUser) {
+            uni.reLaunch({ url: '/pages/onboarding/index' })
+        } else {
+            uni.reLaunch({ url: '/pages/home/index' })
+        }
+    } catch (e) {
+        uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+    } finally {
+        uni.hideLoading()
+    }
 }
 </script>
 

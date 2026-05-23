@@ -1,0 +1,6 @@
+{
+  "name": "follow-op",
+  "version": "1.0.0",
+  "description": "关注操作（关注/取消/列表/粉丝）",
+  "main": "index.js"
+}

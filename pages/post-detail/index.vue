@@ -21,7 +21,8 @@
 <script setup>
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { findProject, findPerson } from '@/sources/mock.js'
+import { findProject as mockFindProject, findPerson as mockFindPerson } from '@/sources/mock.js'
+import { findProject, findPerson } from '@/api/db.js'
 import PostHero from './components/PostHero.vue'
 import PostInfo from './components/PostInfo.vue'
 import PostAuthor from './components/PostAuthor.vue'
@@ -41,10 +42,23 @@ const gallery = [
     'https://images.unsplash.com/photo-1523413555085-22df6de5b4f1?w=900&q=70&auto=format'
 ]
 
-onLoad((q) => {
-    const p = findProject(q?.id)
-    project.value = p
-    author.value = findPerson(p.authorId)
+onLoad(async (q) => {
+    try {
+        const p = await findProject(q?.id)
+        if (p) {
+            project.value = p
+            const a = await findPerson(p.authorId)
+            if (a) author.value = a
+        } else {
+            const fallback = mockFindProject(q?.id)
+            project.value = fallback
+            author.value = mockFindPerson(fallback.authorId)
+        }
+    } catch (e) {
+        const fallback = mockFindProject(q?.id)
+        project.value = fallback
+        author.value = mockFindPerson(fallback.authorId)
+    }
 })
 
 const openAuthor = (id) => {

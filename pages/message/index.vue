@@ -37,7 +37,10 @@ import Tabbar from '@/components/Tabbar.vue'
 const messageStore = useMessageStore()
 const activeChat = ref(null)
 
-onLoad((q) => {
+onLoad(async (q) => {
+    if (!messageStore.conversations.length) {
+        await messageStore.loadConversations()
+    }
     if (q?.convId) {
         const conv = messageStore.getConversation(q.convId)
         if (conv) {

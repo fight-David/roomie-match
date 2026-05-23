@@ -1,0 +1,71 @@
+{
+  "bsonType": "object",
+  "required": [],
+  "permission": {
+    "read": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "properties": {
+    "_id": {
+      "description": "文档 ID"
+    },
+    "nickname": {
+      "bsonType": "string",
+      "title": "昵称"
+    },
+    "bio": {
+      "bsonType": "string",
+      "title": "简介"
+    },
+    "age": {
+      "bsonType": "string",
+      "title": "年龄"
+    },
+    "gender": {
+      "bsonType": "string",
+      "title": "性别"
+    },
+    "target_gender": {
+      "bsonType": "string",
+      "title": "寻找性别"
+    },
+    "budget_min": {
+      "bsonType": "int",
+      "title": "最低预算"
+    },
+    "budget_max": {
+      "bsonType": "int",
+      "title": "最高预算"
+    },
+    "target_districts": {
+      "bsonType": "array",
+      "title": "目标区域"
+    },
+    "target_subways": {
+      "bsonType": "array",
+      "title": "目标地铁"
+    },
+    "cover": {
+      "bsonType": "string",
+      "title": "封面"
+    },
+    "photos": {
+      "bsonType": "array",
+      "title": "照片"
+    },
+    "dims": {
+      "bsonType": "object",
+      "title": "匹配维度"
+    },
+    "loves": {
+      "bsonType": "array",
+      "title": "喜爱标签"
+    },
+    "limits": {
+      "bsonType": "array",
+      "title": "排斥标签"
+    }
+  }
+}

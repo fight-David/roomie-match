@@ -1,0 +1,6 @@
+{
+  "name": "init-db",
+  "version": "1.0.0",
+  "description": "初始化数据库 - 导入 mock 数据",
+  "main": "index.js"
+}

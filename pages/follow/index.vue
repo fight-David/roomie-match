@@ -24,9 +24,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { PEOPLE } from '@/sources/mock.js'
+import { PEOPLE as MOCK_PEOPLE } from '@/sources/mock.js'
+import { fetchPeople } from '@/api/db.js'
 import { useFollowStore } from '@/stores/follow'
 import { useUserStore } from '@/stores/user'
 import { calcHarmony } from '@/utils/match.js'
@@ -37,6 +38,7 @@ const followStore = useFollowStore()
 const userStore = useUserStore()
 
 const activeTab = ref('mutual')
+const peopleMap = ref({})  // id -> person
 
 onLoad((q) => {
     if (q?.tab && ['mutual', 'following', 'followers'].includes(q.tab)) {
@@ -44,7 +46,20 @@ onLoad((q) => {
     }
 })
 
-const getPerson = (id) => PEOPLE.find(p => p.id === id)
+onMounted(async () => {
+    try {
+        const data = await fetchPeople()
+        if (data && data.length) {
+            data.forEach(p => { peopleMap.value[p.id] = p })
+        } else {
+            MOCK_PEOPLE.forEach(p => { peopleMap.value[p.id] = p })
+        }
+    } catch (e) {
+        MOCK_PEOPLE.forEach(p => { peopleMap.value[p.id] = p })
+    }
+})
+
+const getPerson = (id) => peopleMap.value[id] || null
 const withHarmony = (p) => p ? { ...p, harmony: calcHarmony(userStore.profile, p).score } : null
 
 const tabs = computed(() => [

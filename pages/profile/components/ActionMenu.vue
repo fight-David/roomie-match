@@ -1,4 +1,5 @@
 <template>
+    <view>
     <view class="me__section">
         <view class="me__section-title">个人</view>
 
@@ -73,6 +74,7 @@
             </view>
             <text class="me__op-arrow">›</text>
         </view>
+    </view>
     </view>
 </template>
 

@@ -1,0 +1,6 @@
+{
+  "name": "message-op",
+  "version": "1.0.0",
+  "description": "消息操作（发送/获取会话/获取消息）",
+  "main": "index.js"
+}

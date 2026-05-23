@@ -15,32 +15,44 @@
 </template>
 
 <script setup>
-import { PEOPLE } from '@/sources/mock.js'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { calcHarmony } from '@/utils/match.js'
+import { fetchPeople } from '@/api/db.js'
+import { PEOPLE as MOCK_PEOPLE } from '@/sources/mock.js'
 import UserCard from '@/components/UserCard.vue'
 import Tabbar from '@/components/Tabbar.vue'
 
 const userStore = useUserStore()
 const focusId = ref(null)
+const people = ref([])
 
-const people = computed(() => {
-    const current = userStore.profile
-    if (!current) return []
-    return PEOPLE
-                .filter(user => {
-            // 不限 = 男女都显示，否则只匹配 target_gender 对应的性别
-            return current.target_gender === '不限' || user.gender === current.target_gender
-        })
-    .map(user => {
-      const result = calcHarmony(current, user)
-      return { ...user, harmony: result.score }
-    })
+onMounted(async () => {
+    try {
+        const data = await fetchPeople()
+        if (data && data.length) {
+            people.value = data
+        } else {
+            people.value = MOCK_PEOPLE
+        }
+    } catch (e) {
+        console.warn('云数据库读取失败，使用 mock 数据', e)
+        people.value = MOCK_PEOPLE
+    }
 })
 
 const sorted = computed(() => {
-  return [...people.value].sort((a, b) => b.harmony - a.harmony)
+    const current = userStore.profile
+    if (!current) return []
+    return people.value
+        .filter(user => {
+            return current.target_gender === '不限' || user.gender === current.target_gender
+        })
+        .map(user => {
+            const result = calcHarmony(current, user)
+            return { ...user, harmony: result.score }
+        })
+        .sort((a, b) => b.harmony - a.harmony)
 })
 </script>
 

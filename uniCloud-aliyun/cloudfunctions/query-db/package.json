@@ -1,0 +1,6 @@
+{
+  "name": "query-db",
+  "version": "1.0.0",
+  "description": "通用数据库查询（无权限限制）",
+  "main": "index.js"
+}

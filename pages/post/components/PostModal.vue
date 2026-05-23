@@ -6,7 +6,7 @@
                 <text class="pm__close" @tap="close">×</text>
             </view>
 
-            <scroll-view scroll-y class="pm__body">
+            <view class="pm__body">
                 <view class="pm__field">
                     <text class="pm__field-k">类型</text>
                     <view class="pm__type-picker">
@@ -48,7 +48,7 @@
                     <textarea class="pm__field-area" v-model="form.content" :maxlength="500"
                         placeholder="跟人聊聊你的生活和期待..." />
                 </view>
-            </scroll-view>
+            </view>
 
             <view class="pm__foot h-safe-bottom">
                 <view class="pm__btn pm__btn--ghost" @tap="close">取消</view>
@@ -136,10 +136,9 @@ watch(() => props.open, (val) => {
         background: $color-paper;
         border-top-left-radius: 48rpx;
         border-top-right-radius: 48rpx;
-        max-height: 92vh;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
+        max-height: 92vh;
         animation: h-fade-up .32s $ease-out-expo both;
     }
 
@@ -165,7 +164,10 @@ watch(() => props.open, (val) => {
 
     &__body {
         padding: $space-3 $space-4 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         flex: 1;
+        min-height: 0;
     }
 
     &__type-picker {
@@ -201,6 +203,7 @@ watch(() => props.open, (val) => {
     &__field-row {
         display: flex;
         gap: $space-3;
+        flex-wrap: wrap;
     }
 
     &__field-k {
@@ -217,14 +220,17 @@ watch(() => props.open, (val) => {
         width: 100%;
         background: #fff;
         border-radius: $radius-md;
-        padding: 24rpx $space-3;
+        height: 60rpx;
+        padding: 0 $space-2;
         font-size: 26rpx;
         color: $color-ink;
         box-shadow: $shadow-ambient-sm;
+        box-sizing: border-box;
     }
 
     &__field-area {
         min-height: 200rpx;
+        padding: $space-2;
     }
 
     &__foot {
