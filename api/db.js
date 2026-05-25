@@ -8,24 +8,8 @@
  */
 
 // ===== 通用查询云函数 =====
+// 直接走云函数（项目使用自定义 token，不走 clientDB 避免 split 报错）
 async function callQuery(collection, where = {}, options = {}) {
-  // 先尝试走 clientDB，失败则回退到云函数
-  try {
-    const db = uniCloud.database()
-    let query = db.collection(collection)
-    const keys = Object.keys(where)
-    if (keys.length) {
-      query = query.where(where)
-    }
-    const res = await query.get(options)
-    if (res.result && res.result.data) {
-      return res.result.data
-    }
-  } catch (e) {
-    // clientDB 失败，走云函数
-  }
-
-  // 走云函数查询（不需要客户端 token）
   try {
     const res = await uniCloud.callFunction({
       name: 'query-db',

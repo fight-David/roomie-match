@@ -2,7 +2,7 @@
     <view class="onb__slide">
         <view class="onb__title h-display">Looking For</view>
         <view class="onb__pref">
-            <view v-for="g in genders" :key="g.v" class="onb__pref-card" :class="{ 'is-on': gender === g.v }"
+            <view v-for="g in GENDERS" :key="g.v" class="onb__pref-card" :class="{ 'is-on': gender === g.v }"
                 hover-class="onb__pref-card--press" :hover-stay-time="80" @tap="onChoose(g.v)">
                 <view class="onb__pref-icon">{{ g.icon }}</view>
                 <view class="onb__pref-label h-display">{{ g.label }}</view>
@@ -14,19 +14,22 @@
 
 <script setup>
 import { ref } from 'vue';
-const gender = ref('')
-
-const genders = ref([
-    { v: 0, icon: '♀', label: 'Women', hint: '与女性合租' },
-    { v: 1, icon: '♂', label: 'Men', hint: '与男性合租' },
-    { v: 2, icon: '✶', label: 'Everyone', hint: '对性别无所谓' },
-])
-
+import { GENDERS } from '@/utils/constant'
+const props = defineProps({
+    modelValue: { type: Object, default: () => ({}) }
+})
 const emit = defineEmits(['updateUserProfile'])
+
+// 从已有 profile 取初始值
+const initialTarget = props.modelValue?.target_gender
+const gender = ref(initialTarget)
 
 const onChoose = (v) => {
     gender.value = v
+    console.log(v);
+    
     try { uni.vibrateShort({ type: 'light' }) } catch (e) { }
+    // 转回 target_gender 的字符串值
     emit('updateUserProfile', 'target_gender', v)
 }
 

@@ -22,7 +22,9 @@ import { createPinia } from 'pinia'
 export function createApp() {
   const app = createSSRApp(App)
 
-  app.use(createPinia())
+  // 用低版本兼容方式创建 Pinia
+  const pinia = createPinia()
+  app.use(pinia)
 
   return {
     app

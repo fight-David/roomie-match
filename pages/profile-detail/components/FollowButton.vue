@@ -46,7 +46,6 @@ const toggle = () => {
 
 <style lang="scss" scoped>
 .fb {
-    flex: 0 0 34%;
     height: 100rpx;
     border-radius: 28rpx;
     display: flex;
@@ -58,7 +57,9 @@ const toggle = () => {
     font-weight: 500;
     transition: transform $dur-fast $ease-out-expo, background $dur-fast, color $dur-fast;
 
-    &--press { transform: scale(0.97); }
+    &--press {
+        transform: scale(0.97);
+    }
 
     &.is-idle {
         background: #fff;

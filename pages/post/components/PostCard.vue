@@ -1,25 +1,25 @@
 <template>
     <view class="pc" @tap="openDetail">
+
+        <!-- ── 头部：类型 + 删除 ── -->
         <view class="pc__head">
-            <view class="pc__type" :style="{ background: typeBg(j.postType), color: typeColor(j.postType) }">
+            <view class="pc__type" :style="{ background: typeBg, color: typeColor }">
                 <text class="pc__type-dot"></text>
-                <text>{{ typeLabel(j.postType) }}</text>
+                <text>{{ typeLabel }}</text>
             </view>
             <view class="pc__head-right">
-                <text v-if="j.harmony" class="pc__harmony">{{ j.harmony }}%</text>
+                <text v-if="harmonyScore" class="pc__harmony">{{ harmonyScore }}%</text>
                 <text v-if="editable" class="pc__del" @tap.stop="remove">✕</text>
             </view>
         </view>
 
+        <!-- ── 主体 ── -->
         <view class="pc__body">
-            <view class="pc__author">
-                <text class="pc__author-name">{{ j.authorName }}</text>
-                <text class="pc__author-loc">{{ j.location }}</text>
-            </view>
+            <text class="pc__loc" v-if="j.location">{{ j.location }}</text>
             <text class="pc__title h-display">{{ j.title }}</text>
             <text class="pc__content">{{ j.content }}</text>
 
-            <view class="pc__tags">
+            <view class="pc__tags" v-if="j.tags?.length">
                 <text class="pc__tag" v-for="t in j.tags" :key="t">{{ t }}</text>
             </view>
 
@@ -31,7 +31,9 @@
 </template>
 
 <script setup>
-import { POST_TYPES } from '@/sources/mock.js'
+import { computed } from 'vue'
+import { POST_TYPES, PEOPLE } from '@/sources/mock.js'
+import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
     j: { type: Object, required: true },
@@ -39,13 +41,26 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['open', 'remove'])
+const userStore = useUserStore()
 
-const typeLabel = (v) => POST_TYPES[v]?.label || '帖子'
-const typeColor = (v) => POST_TYPES[v]?.color || '#6B6F6A'
-const typeBg = (v) => {
-    const c = POST_TYPES[v]?.color || '#6B6F6A'
-    return c + '1A'
-}
+const typeLabel = computed(() => POST_TYPES[props.j.postType]?.label || '帖子')
+const typeColor = computed(() => POST_TYPES[props.j.postType]?.color || '#6B6F6A')
+const typeBg = computed(() => typeColor.value + '1A')
+
+const harmonyScore = computed(() => {
+    const me = userStore.profile
+    const author = PEOPLE.find(p => p.id === props.j.authorId)
+    if (!me?.dims || !author?.dims) return null
+    const dims = ['noise', 'schedule', 'tidy', 'social', 'finance', 'pets_vibe']
+    let score = 100
+    dims.forEach(k => {
+        score -= Math.abs((me.dims[k] || 3) - (author.dims[k] || 3)) * 3
+    })
+    ;(me.limits || []).forEach(t => {
+        if ((author.loves || []).includes(t)) score -= 15
+    })
+    return Math.max(40, Math.min(99, Math.round(score)))
+})
 
 const openDetail = () => emit('open', props.j)
 const remove = () => emit('remove', props.j)
@@ -107,22 +122,12 @@ const remove = () => emit('remove', props.j)
         padding: 0 $space-1;
     }
 
-    &__author {
-        display: flex;
-        align-items: center;
-        gap: 12rpx;
-        margin-bottom: 8rpx;
-    }
-
-    &__author-name {
+    &__loc {
+        display: block;
         font-size: 22rpx;
-        color: $color-ink;
-        font-weight: 500;
-    }
-
-    &__author-loc {
-        font-size: 20rpx;
         color: $color-ink-ghost;
+        letter-spacing: .5rpx;
+        margin-bottom: 8rpx;
     }
 
     &__title {

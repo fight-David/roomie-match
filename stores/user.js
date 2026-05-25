@@ -11,29 +11,27 @@ export const useUserStore = defineStore('user', {
     profile: {
       id: 'p01',
       nickname: 'Ethan Wu',
-      target_gender: '男',
+      target_gender: '',
       budget_min: 2000,
       budget_max: 4400,
       age: '',
-      gender: '男',
-      bio: '下班会去打球，也会认真做饭。',
-      target_districts: ['徐汇', '闵行'],
-      target_subways: ['1', '11'],
-      cover: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&q=70&auto=format',
+      gender: '',
+      bio: '',
+      target_districts: [],
+      target_subways: [],
+      cover: '',
       photos: [
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&q=70&auto=format',
-        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=900&q=70&auto=format',
       ],
       dims: {
-        schedule: 3,
-        tidy: 4,
-        social: 4,
-        noise: 3,
-        finance: 4,
-        pets_vibe: 2,
+        schedule: null,
+        tidy: null,
+        social: null,
+        noise: null,
+        finance: null,
+        pets_vibe: null,
       },
-      loves: ['篮球', '健身', '做饭', 'Citywalk'],
-      limits: ['太邋遢', '冷暴力'],
+      loves: [],
+      limits: [],
     }
   }),
 
@@ -56,6 +54,9 @@ export const useUserStore = defineStore('user', {
           provider: 'weixin',
           success: async (loginRes) => {
             try {
+              console.log('uniCloud:', typeof uniCloud, uniCloud?.config)
+              console.log('code:', loginRes.code)
+
               const cloudRes = await uniCloud.callFunction({
                 name: 'login',
                 data: {
@@ -63,6 +64,8 @@ export const useUserStore = defineStore('user', {
                   code: loginRes.code
                 }
               })
+
+              console.log('cloudRes:', JSON.stringify(cloudRes))
 
               const result = cloudRes.result
               if (result.code === 0) {
@@ -82,6 +85,7 @@ export const useUserStore = defineStore('user', {
                 reject(new Error(result.message || '登录失败'))
               }
             } catch (e) {
+              console.error('login error:', e)
               reject(e)
             }
           },
@@ -102,19 +106,22 @@ export const useUserStore = defineStore('user', {
       })
     },
 
-        async saveProfile() {
-      try {
-        await uniCloud.callFunction({
-          name: 'login',
-          data: {
-            action: 'saveProfile',
-            uid: this.uid || 'p01',
-            profile: this.profile
-          }
-        })
-      } catch (e) {
-        console.warn('保存资料失败', e)
+    async saveProfile() {
+      if (!this.uid) {
+        throw new Error('未登录，无法保存资料')
       }
+      const res = await uniCloud.callFunction({
+        name: 'login',
+        data: {
+          action: 'saveProfile',
+          uid: this.uid,
+          profile: this.profile
+        }
+      })
+      if (res.result && res.result.code !== 0) {
+        throw new Error(res.result.message || '保存失败')
+      }
+      return res.result
     }
   }
 })

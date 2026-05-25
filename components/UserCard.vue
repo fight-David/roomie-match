@@ -5,7 +5,7 @@
             <image class="dis__img" :class="{ 'is-ken': focused }" :src="user.cover" mode="aspectFill" />
             <view class="dis__mask"></view>
 
-                        <view v-if="harmony" class="dis__ring">
+            <view v-if="harmony" class="dis__ring">
                 <ring :value="harmony" :size="96" :stroke="2" tone="ghost" />
             </view>
 
@@ -19,7 +19,7 @@
         <view class="dis__plate">
             <view class="dis__name-row">
                 <text class="dis__name h-display">{{ user.nickname }}</text>
-                <text class="dis__role"> 找{{ user.target_gender }}室友</text>
+                <text class="dis__role"> 找{{user.target_gender }}室友</text>
             </view>
             <view class="dis__tags">
                 <text class="dis__tag" v-for="t in loves" :key="t">{{ t }}</text>

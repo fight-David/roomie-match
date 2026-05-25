@@ -6,10 +6,13 @@ exports.main = async (event, context) => {
 
   try {
     if (action === 'create') {
+      // 过滤废弃字段（harmony 已改为前端实时计算，authorName 通过 authorId 关联取）
+      const { harmony, authorName, _id, ...cleanPost } = post || {};
       const doc = {
-        ...post,
-        id: 'j' + Date.now(),
-        created_at: Date.now()
+        ...cleanPost,
+        photos: cleanPost.photos || [],
+        created_at: Date.now(),
+        updated_at: Date.now()
       };
 
       await db.collection('harmony-posts').add(doc);
@@ -33,6 +36,29 @@ exports.main = async (event, context) => {
       return {
         code: 0,
         data: res.data || []
+      };
+    }
+
+    if (action === 'addComment') {
+      const { postId, name, text } = event;
+      if (!postId || !text) {
+        return { code: -1, message: '参数不完整' };
+      }
+
+      const doc = {
+        id: 'cm' + Date.now(),
+        postId,
+        name: name || '匿名',
+        text,
+        created_at: Date.now()
+      };
+
+      await db.collection('harmony-comments').add(doc);
+
+      return {
+        code: 0,
+        message: '评论成功',
+        data: doc
       };
     }
 

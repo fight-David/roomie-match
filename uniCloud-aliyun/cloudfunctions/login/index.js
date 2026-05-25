@@ -1,47 +1,57 @@
 'use strict';
 const db = uniCloud.database();
-const uniID = require('uni-id-common');
 
-// uni-id 配置
-const uniIDConfig = {
-  passwordSecret: 'rm-harmony-secret-2024',
-  tokenSecret: 'rm-harmony-token-2024',
-  tokenExpiresIn: 2592000,
-  tokenExpiresThreshold: 86400,
-  passwordErrorLimit: 6,
-  bindTokenToDevice: false,
-  wxAuth: {
-    oauth: {
-      weixin: {
-        appid: 'wx88bcb0459ac55ef8',
-        appsecret: 'a2dc09722d6142a17a8e0652a9d42c9c'
-      }
-    }
-  }
-};
+// 微信登录配置
+const wxAppId = 'wx88bcb0459ac55ef8';
+const wxAppSecret = '4c06186b61b238a0bc8e51426027f7b7';
 
 exports.main = async (event, context) => {
-  const uniIDIns = uniID.createInstance({ context, config: uniIDConfig });
-
-  const { action, code } = event;
+  const { action } = event;
 
   try {
     if (action === 'login') {
-      // 微信登录
-      const res = await uniIDIns.login({
-        provider: 'weixin',
-        code
+      const { code } = event;
+      
+      const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${wxAppId}&secret=${wxAppSecret}&js_code=${code}&grant_type=authorization_code`;
+
+      // 用 Node.js 内置 https 模块请求
+      const https = require('https');
+      
+      const wxData = await new Promise((resolve, reject) => {
+        https.get(url, (res) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error('解析微信返回失败: ' + data));
+            }
+          });
+        }).on('error', (e) => {
+          reject(new Error('请求微信失败: ' + e.message));
+        });
       });
 
-      if (res.code !== 0) {
-        return res;
+      if (wxData.errcode && wxData.errcode !== 0) {
+        return {
+          code: -1,
+          message: '微信登录失败: ' + JSON.stringify(wxData)
+        };
+      }
+      const openid = wxData.openid;
+      const unionid = wxData.unionid || openid;
+
+      if (!openid) {
+        return {
+          code: -1,
+          message: '微信登录失败: 未获取到 openid'
+        };
       }
 
-      const uid = res.uid;
-
-      // 查 harmomy-users 有没有这个用户的资料
+      // 查用户资料
       const userRes = await db.collection('harmony-users')
-        .where({ wx_uid: uid })
+        .where({ wx_uid: unionid })
         .get();
 
       let profile = null;
@@ -49,40 +59,51 @@ exports.main = async (event, context) => {
         profile = userRes.data[0];
       }
 
+      // 判断是否为新用户：没有资料，或者资料不完整（没有 onboarding_done 标记）
+      const isNewUser = !profile || !profile.onboarding_done;
+
+      // 新用户自动创建一条空的记录
+      if (!profile) {
+        const newUser = {
+          wx_uid: unionid,
+          wx_openid: openid,
+          created_at: Date.now()
+        };
+        await db.collection('harmony-users').add(newUser);
+      }
+
+      const token = 'token_' + unionid + '_' + Date.now();
+
       return {
         code: 0,
         message: '登录成功',
         data: {
-          token: res.token,
-          uid,
+          token,
+          uid: unionid,
           profile,
-          isNewUser: !profile
+          isNewUser
         }
       };
     }
 
     if (action === 'saveProfile') {
-      // 保存/更新用户资料
       const { uid, profile } = event;
-
-      // 开发阶段跳过 token 校验，正式上线时取消注释
-      // const token = context.uniIdToken;
-      // const check = await uniIDIns.checkToken(token);
-      // if (check.code !== 0) return check;
 
       const existing = await db.collection('harmony-users')
         .where({ wx_uid: uid })
         .get();
 
+      // 过滤掉 _id 等不能被 update 的字段
+      const { _id, wx_openid, created_at, ...rest } = profile || {};
       const doc = {
-        ...profile,
+        ...rest,
         wx_uid: uid,
         updated_at: Date.now()
       };
 
       if (existing.data && existing.data.length) {
         await db.collection('harmony-users')
-          .where({ wx_uid: uid })
+          .doc(existing.data[0]._id)
           .update(doc);
       } else {
         doc.created_at = Date.now();

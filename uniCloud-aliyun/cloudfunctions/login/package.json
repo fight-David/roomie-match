@@ -2,9 +2,5 @@
   "name": "login",
   "version": "1.0.0",
   "description": "微信登录 + 保存用户资料",
-  "main": "index.js",
-  "dependencies": {
-    "uni-id-common": "file:../../../uni_modules/uni-id-common/uniCloud/cloudfunctions/common/uni-id-common"
-  },
-  "extensions": {}
+  "main": "index.js"
 }

@@ -64,7 +64,8 @@ const goOnboarding = async () => {
             uni.reLaunch({ url: '/pages/home/index' })
         }
     } catch (e) {
-        uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+        console.error('登录失败', e)
+        uni.showToast({ title: '登录失败: ' + (e.message || e.errMsg || '未知错误'), icon: 'none' })
     } finally {
         uni.hideLoading()
     }

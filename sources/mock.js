@@ -274,7 +274,7 @@ export const POST_TYPES = {
 
 export const PROJECTS = [
   {
-    id: 'j01', authorId: 'p01', authorName: 'Aria', harmony: 98,
+    id: 'j01', authorId: 'p01',
     postType: 'have_room',
     title: '静安寺 · 两室一厅 · 寻一位爱植物的室友',
     location: '9号线 · 徐家汇',
@@ -282,27 +282,45 @@ export const PROJECTS = [
     moveIn: '8月',
     tags: ['养猫', '养花', '做饭', '朝南', '不打烊'],
     cover: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=900&q=70&auto=format',
-    content: '我有一只叫豆子的布偶，家里养着二十几盆蕨类和琴叶榕，阳台朝南。希望找一位同样喜欢安静、喜欢做饭的朋友，把周末留给自己。'
+    photos: [
+      'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=900&q=70&auto=format',
+      'https://images.unsplash.com/photo-1501183638710-841dd1904471?w=900&q=70&auto=format',
+      'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=900&q=70&auto=format',
+    ],
+    content: '我有一只叫豆子的布偶，家里养着二十几盆蕨类和琴叶榕，阳台朝南。希望找一位同样喜欢安静、喜欢做饭的朋友，把周末留给自己。',
+    created_at: 1748000000000,
+    updated_at: 1748000000000,
   },
   {
-    id: 'j22', authorId: 'p03', authorName: 'Iris', harmony: 90,
+    id: 'j22', authorId: 'p03',
     postType: 'pure_match',
     title: '先认识一下 · 晨型 / 爱猫 / 不社交的周末',
     location: '不限',
     budget: 0, moveIn: '',
     tags: ['晨型', '养猫', '不社交', '先认识'],
     cover: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=900&q=70&auto=format',
-    content: '还没到找房那一步。想先认识一些作息相近、愿意周末各自安静的朋友。如果我们聊得来，找房子是顺便的事。'
+    photos: [
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=900&q=70&auto=format',
+    ],
+    content: '还没到找房那一步。想先认识一些作息相近、愿意周末各自安静的朋友。如果我们聊得来，找房子是顺便的事。',
+    created_at: 1747900000000,
+    updated_at: 1747900000000,
   },
   {
-    id: 'j23', authorId: 'p01', authorName: 'Aria', harmony: 96,
+    id: 'j23', authorId: 'p01',
     postType: 'seek_room',
     title: '想在静安找套两房 · 招一位插画 / 摄影的搭子',
     location: '静安 / 徐汇',
     budget: 5500, moveIn: '9月',
     tags: ['静安', '插画', '摄影', '找房搭子'],
     cover: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=70&auto=format',
-    content: '一个人预算偏紧，想找一个气味相投的人一起在静安或徐汇找两房。我养了一只布偶，希望搭子对毛孩不过敏就行。'
+    photos: [
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=70&auto=format',
+      'https://images.unsplash.com/photo-1523413555085-22df6de5b4f1?w=900&q=70&auto=format',
+    ],
+    content: '一个人预算偏紧，想找一个气味相投的人一起在静安或徐汇找两房。我养了一只布偶，希望搭子对毛孩不过敏就行。',
+    created_at: 1747800000000,
+    updated_at: 1747800000000,
   },
 ]
 

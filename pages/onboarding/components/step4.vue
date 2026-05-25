@@ -26,16 +26,27 @@ import { DIMENSIONS } from '@/sources/mock.js'
 import RadarChart from '@/components/RadarChart.vue'
 import Vslider from '@/components/Vslider.vue'
 import { computed, ref } from 'vue'
+
+const props = defineProps({
+  modelValue: { type: Object, default: () => ({}) }
+})
 const emit = defineEmits(['updateUserProfile'])
 
-const values = ref([3, 3, 3, 3, 3, 3])
 const dims = ref([...DIMENSIONS])
+const dimKeys = ['schedule', 'tidy', 'social', 'noise', 'finance', 'pets_vibe']
+
+// 从已有 profile 的 dims 取初始值
+const initialDims = props.modelValue?.dims || {}
+const values = ref(dimKeys.map(key => initialDims[key] || 3))
 
 const labels = computed(() => { return dims.value.map(d => d.label) })
 
 const updateDim = (i, v) => {
     values.value[i] = v
-    emit('updateUserProfile', i, v)
+    // 构建完整的 dims 对象
+    const dimsObj = {}
+    dimKeys.forEach((key, idx) => { dimsObj[key] = values.value[idx] })
+    emit('updateUserProfile', 'dims', dimsObj)
 }
 
 </script>

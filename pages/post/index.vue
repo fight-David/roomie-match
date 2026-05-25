@@ -140,9 +140,6 @@ const removePost = async (j) => {
 const submitPost = async (formData) => {
     const newPost = {
         authorId: currentUserId.value,
-        authorName: userStore.profile?.nickname || '我',
-        harmony: 100,
-        cover: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=900&q=70&auto=format',
         ...formData
     }
 
@@ -161,7 +158,8 @@ const submitPost = async (formData) => {
         // 本地保底
         const fallback = {
             id: 'j' + Date.now(),
-            ...newPost
+            ...newPost,
+            created_at: Date.now()
         }
         posts.value.unshift(fallback)
         modalOpen.value = false

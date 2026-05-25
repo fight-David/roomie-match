@@ -1,34 +1,31 @@
 <template>
-    <view class="pa" @tap="open">
-        <image class="pa__ava" :src="author.cover" mode="aspectFill" />
-        <view class="pa__body">
+    <view class="pa" @tap="openAuthor">
+        <image class="pa__ava" :src="avatar" mode="aspectFill" />
+        <view class="pa__info">
             <text class="pa__name">{{ author.nickname }}</text>
-            <text class="pa__role">{{ roleText }}</text>
+            <text class="pa__role">{{ roleLabel }}</text>
         </view>
-        <view class="pa__ring">
-            <text class="pa__harmony">{{ harmony }}%</text>
+        <view class="pa__harmony" v-if="harmony">
+            <text class="pa__num">{{ harmony }}</text>
+            <text class="pa__pct">%</text>
         </view>
     </view>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { POST_TYPES } from '@/sources/mock.js'
 
 const props = defineProps({
     author: { type: Object, required: true },
-    postType: { type: String, default: '' },
-    harmony: { type: Number, default: 0 }
+    roleLabel: { type: String, default: '' },
+    harmony: { type: Number, default: null }
 })
 
 const emit = defineEmits(['open'])
 
-const roleText = computed(() => {
-    const t = POST_TYPES[props.postType]
-    return t ? t.label : '室友'
-})
+const avatar = computed(() => props.author.cover || props.author.photos?.[0] || '')
 
-const open = () => emit('open', props.author.id)
+const openAuthor = () => emit('open', props.author.id)
 </script>
 
 <style lang="scss" scoped>
@@ -36,49 +33,51 @@ const open = () => emit('open', props.author.id)
     display: flex;
     align-items: center;
     gap: $space-3;
-    padding: $space-3;
-    background: #fff;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-ambient-sm;
 
     &__ava {
-        width: 96rpx;
-        height: 96rpx;
+        width: 88rpx;
+        height: 88rpx;
         border-radius: 50%;
         flex-shrink: 0;
+        background: $color-mist;
     }
 
-    &__body { flex: 1; }
+    &__info { flex: 1; }
 
     &__name {
         display: block;
-        font-size: $font-h3;
+        font-size: $font-body;
         font-weight: 500;
         color: $color-ink;
+        letter-spacing: .5rpx;
     }
 
     &__role {
         display: block;
-        font-size: $font-sm;
+        font-size: $font-xs;
         color: $color-ink-soft;
         margin-top: 4rpx;
-    }
-
-    &__ring {
-        width: 72rpx;
-        height: 72rpx;
-        border-radius: 50%;
-        border: 4rpx solid #526253;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
+        letter-spacing: 1rpx;
     }
 
     &__harmony {
-        font-size: 20rpx;
-        font-weight: 600;
+        display: flex;
+        align-items: baseline;
+        gap: 2rpx;
+        flex-shrink: 0;
+    }
+
+    &__num {
+        font-size: 36rpx;
+        font-weight: 300;
         color: #526253;
+        letter-spacing: -1rpx;
+    }
+
+    &__pct {
+        font-size: $font-xs;
+        color: #526253;
+        opacity: .7;
     }
 }
 </style>

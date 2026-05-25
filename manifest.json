@@ -2,6 +2,7 @@
     "name" : "roomie-match",
     "appid" : "__UNI__4549850",
     "description" : "",
+    "vueVersion" : "3",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,
@@ -44,5 +45,13 @@
     "setting" : {
         "urlCheck" : false
     },
-    "usingComponents" : true
+    "usingComponents" : true,
+    "mp-weixin" : {
+        "appid" : "wx88bcb0459ac55ef8",
+        "setting" : {
+            "es6" : true,
+            "postcss" : true,
+            "urlCheck" : true
+        }
+    }
 }

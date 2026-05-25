@@ -25,6 +25,21 @@
             </view>
         </view>
 
+        <!-- ====== 性别选择 ====== -->
+        <view class="onb__field">
+            <view class="onb__gender-label">性别<text class="onb__required">*</text></view>
+            <view class="onb__gender-row">
+                <view class="onb__gender-btn" :class="{ 'is-active': gender === '男' }"
+                    hover-class="onb__gender-btn--press" :hover-stay-time="80" @tap="gender = '男'">
+                    <text>男</text>
+                </view>
+                <view class="onb__gender-btn" :class="{ 'is-active': gender === '女' }"
+                    hover-class="onb__gender-btn--press" :hover-stay-time="80" @tap="gender = '女'">
+                    <text>女</text>
+                </view>
+            </view>
+        </view>
+
         <!-- ====== 昵称 ====== -->
         <view class="onb__field">
             <input class="onb__input" :value="nickname" @input="e => nickname = e.detail.value" placeholder="你的名字或昵称"
@@ -34,7 +49,7 @@
         <!-- ====== 介绍 ====== -->
         <view class="onb__field">
             <textarea class="onb__textarea" :value="bio" @input="e => bio = e.detail.value"
-                placeholder="用几句话介绍一下自己…&#10;生活习惯、兴趣爱好、理想中的合租氛围" placeholder-class="onb__textarea-placeholder"
+                placeholder="用几句话介绍一下自己…\n;生活习惯、兴趣爱好、理想中的合租氛围" placeholder-class="onb__textarea-placeholder"
                 maxlength="200" />
             <text class="onb__textarea-count">{{ bio.length }}/200</text>
         </view>
@@ -49,38 +64,36 @@
 <script setup>
 import { ref, watch } from 'vue'
 
+const props = defineProps({
+  modelValue: { type: Object, default: () => ({}) }
+})
 const emit = defineEmits(['updateUserProfile'])
 
 const MAX_PHOTOS = 6
-const MAX_SIZE = 2 * 1024 * 1024  // 2MB
+const MAX_SIZE = 2 * 1024 * 1024
 
-const photos = ref([])
-const nickname = ref('')
-const bio = ref('')
+const photos = ref(props.modelValue?.photos ? [...props.modelValue.photos] : [])
+const nickname = ref(props.modelValue?.nickname || '')
+const gender = ref(props.modelValue?.gender || '')
+const bio = ref(props.modelValue?.bio || '')
 
-// —— 校验文件大小 ——
 const checkSize = (path) => {
     return new Promise((resolve) => {
         uni.getFileInfo({
             filePath: path,
             success: (res) => {
                 if (res.size > MAX_SIZE) {
-                    uni.showToast({
-                        title: '图片超过 2MB，请截图后上传',
-                        icon: 'none',
-                        duration: 3000
-                    })
+                    uni.showToast({ title: '图片超过 2MB，请截图后上传', icon: 'none', duration: 3000 })
                     resolve(false)
                 } else {
                     resolve(true)
                 }
             },
-            fail: () => resolve(true)  // 获取不到大小就放过
+            fail: () => resolve(true)
         })
     })
 }
 
-// —— 添加照片 ——
 const addPhoto = async () => {
     const remain = MAX_PHOTOS - photos.value.length
     uni.chooseImage({
@@ -96,20 +109,20 @@ const addPhoto = async () => {
             if (valid.length) {
                 photos.value = [...photos.value, ...valid]
                 emit('updateUserProfile', 'photos', [...photos.value])
-                emit('updateUserProfile', 'avatar', photos.value[0] || '')
+                emit('updateUserProfile', 'cover', photos.value[0] || '')
             }
         }
     })
 }
 
-// —— 删除照片 ——
 const removePhoto = (i) => {
     photos.value.splice(i, 1)
     emit('updateUserProfile', 'photos', [...photos.value])
-    emit('updateUserProfile', 'avatar', photos.value[0] || '')
+    emit('updateUserProfile', 'cover', photos.value[0] || '')
 }
 
 // —— 实时同步 ——
+watch(gender, (v) => emit('updateUserProfile', 'gender', v))
 watch(nickname, (v) => emit('updateUserProfile', 'nickname', v))
 watch(bio, (v) => emit('updateUserProfile', 'bio', v))
 </script>
@@ -222,6 +235,53 @@ watch(bio, (v) => emit('updateUserProfile', 'bio', v))
         font-weight: 200;
         color: $color-ink-ghost;
         line-height: 1;
+    }
+
+
+
+    /* ---- 性别 ---- */
+    &__gender-label {
+        font-size: $font-xs;
+        font-weight: 500;
+        letter-spacing: 4rpx;
+        color: $color-ink-ghost;
+        text-transform: uppercase;
+        margin-bottom: $space-2;
+    }
+
+    &__required {
+        color: #e74c3c;
+        margin-left: 4rpx;
+    }
+
+    &__gender-row {
+        display: flex;
+        gap: 16rpx;
+    }
+
+        &__gender-btn {
+        flex: 1;
+        height: 88rpx;
+        border-radius: 24rpx;
+        background: #fff;
+        border: 1.5rpx solid rgba(143, 160, 142, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-body;
+        color: $color-ink-soft;
+        letter-spacing: 3rpx;
+        transition: all200msease;
+
+        &.is-active {
+            background: $color-ink;
+            color: #fff;
+            border-color: $color-ink;
+        }
+
+        &--press {
+            transform: scale(0.97);
+        }
     }
 
     /* ---- 输入框 ---- */

@@ -24,7 +24,6 @@ const chat = () => {
 
 <style lang="scss" scoped>
 .cb {
-    flex: 1;
     height: 100rpx;
     border-radius: 28rpx;
     display: flex;

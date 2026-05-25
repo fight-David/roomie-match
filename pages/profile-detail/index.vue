@@ -12,62 +12,48 @@
         </view>
 
         <!-- ===== 照片画廊 ===== -->
-        <PhotoGallery
-            :photos="allPhotos"
-            :editable="isEditMode"
-            @add-photo="addPhoto"
-            @remove-photo="removePhoto"
-        />
+        <PhotoGallery :photos="allPhotos" :editable="isEditMode" @add-photo="addPhoto" @remove-photo="removePhoto" />
 
         <!-- ===== Body ===== -->
         <view class="pfd__body">
 
             <!-- ── 编辑模式 ── -->
             <template v-if="isEditMode">
-                                <!-- 昵称 / 简介 -->
+                <!-- 昵称 / 简介 -->
                 <view class="pfd__section">
-                    <InlineEditor name="nickname" label="昵称" v-model="user.nickname" placeholder="输入昵称"
-                        type="text" :maxlength="20" :active-name="activeField"
-                        @start-edit="activeField = $event" @save="onSave" />
-                    <InlineEditor name="bio" label="简介" v-model="user.bio" placeholder="写一段自我介绍…"
-                        type="textarea" :maxlength="200" :active-name="activeField"
-                        @start-edit="activeField = $event" @save="onSave" />
+                    <InlineEditor name="nickname" label="昵称" v-model="user.nickname" placeholder="输入昵称" type="text"
+                        :maxlength="20" :active-name="activeField" @start-edit="activeField = $event" @save="onSave" />
+                    <InlineEditor name="bio" label="简介" v-model="user.bio" placeholder="写一段自我介绍…" type="textarea"
+                        :maxlength="200" :active-name="activeField" @start-edit="activeField = $event" @save="onSave" />
                 </view>
 
                 <!-- 性别 / 目标 -->
                 <view class="pfd__section">
-                    <InlineEditor name="gender" label="我的性别" v-model="user.gender" placeholder="选择性别"
-                        type="gender" :active-name="activeField"
-                        @start-edit="activeField = $event" @save="onSave" />
+                    <InlineEditor name="gender" label="我的性别" v-model="user.gender" placeholder="选择性别" type="gender"
+                        :active-name="activeField" @start-edit="activeField = $event" @save="onSave" />
                     <InlineEditor name="target_gender" label="寻找" v-model="user.target_gender" placeholder="不限"
-                        type="target_gender" :active-name="activeField"
-                        @start-edit="activeField = $event" @save="onSave" />
+                        type="target_gender" :active-name="activeField" @start-edit="activeField = $event"
+                        @save="onSave" />
                 </view>
 
                 <!-- 预算 / 区域 -->
                 <view class="pfd__section">
-                    <InlineEditor name="budget" label="预算" :model-value="{ budget_min: user.budget_min, budget_max: user.budget_max }"
-                        placeholder="设置预算" type="budget" :active-name="activeField"
-                        @start-edit="activeField = $event"
+                    <InlineEditor name="budget" label="预算"
+                        :model-value="{ budget_min: user.budget_min, budget_max: user.budget_max }" placeholder="设置预算"
+                        type="budget" :active-name="activeField" @start-edit="activeField = $event"
                         @update:model-value="onBudgetUpdate" @save="onSave" />
                     <InlineEditor name="districts" label="区域" v-model="user.target_districts" placeholder="选择区域"
-                        type="text" :active-name="activeField"
-                        @start-edit="activeField = $event" @save="onSave" />
+                        type="text" :active-name="activeField" @start-edit="activeField = $event" @save="onSave" />
                     <InlineEditor name="subways" label="地铁" v-model="user.target_subways" placeholder="选择地铁线"
-                        type="text" :active-name="activeField"
-                        @start-edit="activeField = $event" @save="onSave" />
+                        type="text" :active-name="activeField" @start-edit="activeField = $event" @save="onSave" />
                 </view>
 
                 <!-- 维度滑块 -->
                 <DimSlider :dims="user.dims" @update:dims="onDimsUpdate" />
 
-                                <!-- 标签 -->
-                <EditTags
-                    :loves="user.loves"
-                    :limits="user.limits"
-                    @update:loves="val => user.loves = val"
-                    @update:limits="val => user.limits = val"
-                />
+                <!-- 标签 -->
+                <EditTags :loves="user.loves" :limits="user.limits" @update:loves="val => user.loves = val"
+                    @update:limits="val => user.limits = val" />
             </template>
 
             <!-- ── 查看模式 ── -->
@@ -83,20 +69,18 @@
         <view class="pfd__bottom">
             <view class="pfd__bottom-inner h-safe-bottom">
                 <template v-if="isEditMode">
-                    <view class="pfd__btn pfd__btn--ghost" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="discard">
+                    <view class="pfd__btn pfd__btn--ghost" hover-class="pfd__btn--press" :hover-stay-time="80"
+                        @tap="discard">
                         <text>放弃</text>
                     </view>
-                    <view class="pfd__btn pfd__btn--solid" hover-class="pfd__btn--press" :hover-stay-time="80" @tap="saveProfile">
+                    <view class="pfd__btn pfd__btn--solid" hover-class="pfd__btn--press" :hover-stay-time="80"
+                        @tap="saveProfile">
                         <text>保存</text>
                     </view>
                 </template>
-                                <template v-else>
-                    <FollowButton :user-id="user.id" />
-                    <ChatButton
-                        :user-id="user.id"
-                        :user-name="user.nickname"
-                        :user-avatar="user.cover"
-                    />
+                <template v-else>
+                    <FollowButton style="flex: 0 0 34%;" :user-id="user.id" />
+                    <ChatButton style="flex: 1;" :user-id="user.id" :user-name="user.nickname" :user-avatar="user.cover" />
                 </template>
             </view>
         </view>
@@ -165,10 +149,14 @@ const saveProfile = async () => {
     userStore.setProfile({ ...user.value })
 
     // 同步到云端
-    await userStore.saveProfile()
-
-    uni.showToast({ title: '已保存', icon: 'success' })
-    setTimeout(() => uni.navigateBack(), 600)
+    try {
+      await userStore.saveProfile()
+      uni.showToast({ title: '已保存', icon: 'success' })
+      setTimeout(() => uni.navigateBack(), 600)
+    } catch (e) {
+      console.error('保存失败', e)
+      uni.showToast({ title: '保存失败', icon: 'none' })
+    }
 }
 
 const discard = () => uni.navigateBack()
@@ -187,17 +175,39 @@ const onDimsUpdate = (dims) => {
     user.value.dims = { ...dims }
 }
 
+// ——— 上传图片到云存储 ———
+const uploadToCloud = (tempPath) => {
+    return new Promise((resolve, reject) => {
+        const ext = tempPath.split('.').pop() || 'jpg'
+        const fileName = `avatars/${userStore.uid || 'unknown'}_${Date.now()}.${ext}`
+        uniCloud.uploadFile({
+            filePath: tempPath,
+            cloudPath: fileName,
+            success: (res) => resolve(res.fileID),
+            fail: (e) => reject(new Error('上传失败: ' + (e.errMsg || e.message)))
+        })
+    })
+}
+
 // ——— 照片操作 ———
-const addPhoto = () => {
+const addPhoto = async () => {
     uni.chooseImage({
         count: 1,
-        success: (res) => {
+        success: async (res) => {
             const tempPath = res.tempFilePaths[0]
-            if (!user.value.photos) user.value.photos = []
-            user.value.photos.push(tempPath)
-            // 如果还没有 cover，把第一张设为 cover
-            if (!user.value.cover) {
-                user.value.cover = tempPath
+            uni.showLoading({ title: '上传中…', mask: true })
+            try {
+                const cloudUrl = await uploadToCloud(tempPath)
+                if (!user.value.photos) user.value.photos = []
+                user.value.photos.push(cloudUrl)
+                if (!user.value.cover) {
+                    user.value.cover = cloudUrl
+                }
+            } catch (e) {
+                console.error('照片上传失败', e)
+                uni.showToast({ title: '照片上传失败', icon: 'none' })
+            } finally {
+                uni.hideLoading()
             }
         }
     })

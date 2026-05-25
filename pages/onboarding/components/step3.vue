@@ -67,14 +67,17 @@ import Tag from '@/components/Tag.vue'
 import { RED_TAGS, BLACK_TAGS } from '@/sources/mock.js'
 import { ref } from 'vue'
 
+const props = defineProps({
+  modelValue: { type: Object, default: () => ({}) }
+})
 const emit = defineEmits(['updateUserProfile'])
 
 const MAX = 5
 
 const redPool = ref([...RED_TAGS])
 const blackPool = ref([...BLACK_TAGS])
-const red = ref([])
-const black = ref([])
+const red = ref(props.modelValue?.loves ? [...props.modelValue.loves] : [])
+const black = ref(props.modelValue?.limits ? [...props.modelValue.limits] : [])
 const addOpen = ref(false)
 const addKind = ref('red')
 const addText = ref('')
