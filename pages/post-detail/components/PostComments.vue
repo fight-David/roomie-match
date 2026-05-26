@@ -24,7 +24,7 @@ defineProps({
 
 <style lang="scss" scoped>
 .pc {
-    margin-top: $space-6;
+    margin: $space-6 0;
 
     &__hd {
         display: flex;

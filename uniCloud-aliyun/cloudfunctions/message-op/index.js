@@ -6,10 +6,8 @@ exports.main = async (event, context) => {
 
   try {
     if (action === 'send') {
-      const { convId, senderId, text, peerId } = event;
+      const { convId, senderId, text, peerId, ownerId } = event;
 
-      // 查找或创建会话
-      let conv;
       const existing = await db.collection('harmony-conversations')
         .where({ id: convId })
         .get();
@@ -21,7 +19,7 @@ exports.main = async (event, context) => {
       });
 
       const msg = {
-        from: senderId === event.currentUserId ? 'me' : 'peer',
+        senderId,
         text,
         time,
         timestamp: now
@@ -30,10 +28,10 @@ exports.main = async (event, context) => {
       const convData = {
         lastMsg: text,
         lastTime: time,
+        lastTimestamp: now
       };
 
       if (existing.data && existing.data.length) {
-        // 已有会话，追加消息
         await db.collection('harmony-conversations')
           .where({ id: convId })
           .update({
@@ -41,9 +39,10 @@ exports.main = async (event, context) => {
             messages: db.command.push(msg)
           });
       } else {
-        // 新会话
+        // 新会话：用前端传的 ownerId（双方 id 中较小那个），保证查询时双方都能查到
         const newConv = {
           id: convId,
+          ownerId: ownerId || senderId,
           peerId,
           peerName: event.peerName || '',
           peerAvatar: event.peerAvatar || '',
@@ -54,7 +53,6 @@ exports.main = async (event, context) => {
         await db.collection('harmony-conversations').add(newConv);
       }
 
-      // 同步写入消息集合
       await db.collection('harmony-messages').add({
         convId,
         senderId,
@@ -67,15 +65,18 @@ exports.main = async (event, context) => {
     }
 
     if (action === 'list') {
-      // 获取用户所有会话
       const { userId } = event;
+      if (!userId) {
+        return { code: -1, message: '缺少 userId' };
+      }
+
+      const dbCmd = db.command;
       const res = await db.collection('harmony-conversations')
-        .where({
-          $or: [
-            { peerId: userId }
-          ]
-        })
-        .orderBy('lastTime', 'desc')
+        .where(dbCmd.or([
+          { ownerId: userId },
+          { peerId: userId }
+        ]))
+        .orderBy('lastTimestamp', 'desc')
         .get();
 
       return {

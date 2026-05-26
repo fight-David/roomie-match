@@ -5,8 +5,8 @@
             <view class="pfd__nav-bar">
                 <text class="pfd__nav-back" @tap="back">‹</text>
                 <text class="pfd__nav-title">{{ isEditMode ? '编辑个人资料' : user.nickname }}</text>
-                <text class="pfd__nav-action" @tap="isEditMode ? saveProfile() : share()">
-                    {{ isEditMode ? '保存' : '↗' }}
+                <text class="pfd__nav-action" @tap="isEditMode ? saveProfile() : openMoreMenu()">
+                    {{ isEditMode ? '保存' : '⋯' }}
                 </text>
             </view>
         </view>
@@ -138,6 +138,81 @@ const activeField = ref('')
 // ——— 通用操作 ———
 const back = () => uni.navigateBack()
 const share = () => uni.showToast({ title: '分享功能即将上线', icon: 'none' })
+
+// 更多操作菜单（分享/拉黑/举报）
+const openMoreMenu = () => {
+    const isMe = user.value.id === userStore.uid || user.value.id === userStore.profile?.id
+    if (isMe) {
+        // 自己的资料页：仅显示分享
+        share()
+        return
+    }
+
+    const targetId = user.value.id || user.value._id
+    const blocked = userStore.isBlocked(targetId)
+    const items = [
+        '分享',
+        blocked ? '取消拉黑' : '拉黑此人',
+        '举报'
+    ]
+
+    uni.showActionSheet({
+        itemList: items,
+        success: async (res) => {
+            const idx = res.tapIndex
+            if (idx === 0) {
+                share()
+            } else if (idx === 1) {
+                await toggleBlock(targetId, blocked)
+            } else if (idx === 2) {
+                openReport(targetId)
+            }
+        }
+    })
+}
+
+const toggleBlock = async (targetId, currentlyBlocked) => {
+    if (!targetId) return
+    try {
+        if (currentlyBlocked) {
+            await userStore.unblockUser(targetId)
+            uni.showToast({ title: '已取消拉黑', icon: 'success' })
+        } else {
+            const ok = await new Promise(r => {
+                uni.showModal({
+                    title: '拉黑此人',
+                    content: '拉黑后你将不再看到对方的帖子和动态',
+                    confirmText: '拉黑',
+                    confirmColor: '#c44',
+                    success: (m) => r(m.confirm)
+                })
+            })
+            if (!ok) return
+            await userStore.blockUser(targetId)
+            uni.showToast({ title: '已拉黑', icon: 'success' })
+            setTimeout(() => uni.navigateBack(), 600)
+        }
+    } catch (e) {
+        uni.showToast({ title: e.message || '操作失败', icon: 'none' })
+    }
+}
+
+const openReport = (targetId) => {
+    if (!targetId) return
+    const reasons = ['色情低俗', '骚扰辱骂', '虚假信息', '诈骗广告', '其他']
+    uni.showActionSheet({
+        itemList: reasons,
+        success: async (res) => {
+            const reason = reasons[res.tapIndex]
+            try {
+                await userStore.reportTarget('user', targetId, reason)
+                uni.showToast({ title: '已收到举报', icon: 'success' })
+            } catch (e) {
+                uni.showToast({ title: e.message || '举报失败', icon: 'none' })
+            }
+        }
+    })
+}
 
 // ——— 编辑保存 ———
 const saveProfile = async () => {

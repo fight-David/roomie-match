@@ -2,7 +2,10 @@
   <view class="onb__slide">
     <!-- 标题 -->
     <view class="onb__header">
-      <view class="onb__title h-display">你想住在哪里？</view>
+      <view class="onb__title-row">
+        <view class="onb__title h-display">你想住在哪里？</view>
+        <CitySwitcher :model-value="currentCity" @change="onCityChange" />
+      </view>
     </view>
 
     <!-- 热门区域 -->
@@ -103,7 +106,9 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import CitySwitcher from '@/components/CitySwitcher.vue'
+import { getDistricts, getSubwayLines, DEFAULT_CITY_CODE } from '@/utils/cities.js'
 
 const props = defineProps({
   modelValue: {
@@ -117,19 +122,23 @@ const emit = defineEmits(['updateUserProfile'])
 const MAX_SELECT = 3
 
 // =========================
-// 热门区域
+// 城市（联动区域 + 地铁）
 // =========================
-const areas = [
-  '静安',
-  '徐汇',
-  '闵行',
-  '黄浦',
-  '宝山',
-  '长宁',
-  '杨浦',
-  '浦东',
-  '普陀'
-]
+const currentCity = computed(() => props.modelValue?.city || DEFAULT_CITY_CODE)
+
+const onCityChange = (code) => {
+  // 切换城市时，清空已选的区域和地铁（因为不属于新城市）
+  selectedAreas.value = []
+  selectedMetro.value = []
+  emit('updateUserProfile', 'city', code)
+  emit('updateUserProfile', 'target_districts', [])
+  emit('updateUserProfile', 'target_subways', [])
+}
+
+// =========================
+// 热门区域（来自城市配置）
+// =========================
+const areas = computed(() => getDistricts(currentCity.value))
 
 const selectedAreas = ref(
   props.modelValue?.target_districts
@@ -163,24 +172,7 @@ const toggleArea = (area) => {
 // =========================
 // 地铁偏好
 // =========================
-const metroLines = [
-  '1号线',
-  '2号线',
-  '3号线',
-  '4号线',
-  '6号线',
-  '7号线',
-  '8号线',
-  '9号线',
-  '10号线',
-  '11号线',
-  '12号线',
-  '13号线',
-  '15号线',
-  '17号线',
-  '18号线',
-  '浦江线'
-]
+const metroLines = computed(() => getSubwayLines(currentCity.value))
 
 const selectedMetro = ref(
   props.modelValue?.target_subways
@@ -334,6 +326,13 @@ const endThumb = () => {
     padding-top: $space-1;
     padding-bottom: $space-4;
     text-align: center;
+  }
+
+  &__title-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
   }
 
   &__section {

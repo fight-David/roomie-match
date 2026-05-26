@@ -1,8 +1,11 @@
 <template>
   <view class="dis">
     <view class="dis__header">
-      <text class="dis__title h-display">发现室友</text>
-      <text class="dis__subtitle">根据你的偏好为你推荐</text>
+      <view class="dis__title-row">
+        <text class="dis__title h-display">发现室友</text>
+        <CitySwitcher :model-value="currentCity" @change="onCityChange" />
+      </view>
+      <text class="dis__subtitle">{{ subtitle }}</text>
     </view>
 
     <!-- 骨架屏 -->
@@ -38,14 +41,22 @@ import { computed, ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { calcHarmony } from '@/utils/match.js'
 import { fetchPeople } from '@/api/db.js'
-import { PEOPLE as MOCK_PEOPLE } from '@/sources/mock.js'
+import { getCityName, DEFAULT_CITY_CODE } from '@/utils/cities.js'
 import UserCard from '@/components/UserCard.vue'
+import CitySwitcher from '@/components/CitySwitcher.vue'
 import Tabbar from '@/components/Tabbar.vue'
 
 const userStore = useUserStore()
 const focusId = ref(null)
 const people = ref([])
 const loading = ref(true)
+
+const currentCity = computed(() => userStore.profile?.city || DEFAULT_CITY_CODE)
+const subtitle = computed(() => `${getCityName(currentCity.value)} · 根据你的偏好为你推荐`)
+
+const onCityChange = (code) => {
+  userStore.setCity(code)
+}
 
 const goDetail = (p) => {
   uni.navigateTo({ url: `/pages/profile-detail/index?id=${p.id}` })
@@ -54,14 +65,10 @@ const goDetail = (p) => {
 onMounted(async () => {
   try {
     const data = await fetchPeople()
-    if (data && data.length) {
-      people.value = data
-    } else {
-      people.value = MOCK_PEOPLE
-    }
+    people.value = data && data.length ? data : []
   } catch (e) {
-    console.warn('云数据库读取失败，使用 mock 数据', e)
-    people.value = MOCK_PEOPLE
+    console.warn('云数据库读取失败', e)
+    people.value = []
   } finally {
     loading.value = false
   }
@@ -69,11 +76,23 @@ onMounted(async () => {
 
 const sorted = computed(() => {
   const current = userStore.profile
-  console.log('sorted - current:', current?.target_gender, 'people:', people.value?.length)
   if (!current) return []
   if (!people.value?.length) return []
   return people.value
       .filter(user => {
+          // 排除自己
+          if (user.id === current.id) return false
+          if (user.wx_uid && user.wx_uid === current.id) return false
+
+          // 排除拉黑的人
+          const uid = user.id || user.wx_uid || user._id
+          if (userStore.blockedIds?.includes(uid)) return false
+
+          // 城市筛选（用户没设 city 默认归到上海，避免老数据被全部过滤掉）
+          const userCity = user.city || DEFAULT_CITY_CODE
+          if (userCity !== currentCity.value) return false
+
+          // 性别筛选
           const tg = current.target_gender
           if (!tg || tg === '不限') return true
           return user.gender === tg
@@ -99,6 +118,13 @@ const sorted = computed(() => {
 
   &__header {
     padding: $space-7 $space-2 $space-3;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+    flex-wrap: wrap;
   }
 
   &__title {

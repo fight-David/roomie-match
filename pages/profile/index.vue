@@ -39,7 +39,7 @@ const editProfile = () => {
     uni.navigateTo({ url: '/pages/profile-detail/index?mode=edit' })
 }
 const myPosts = () => {
-    uni.showToast({ title: '动态功能即将上线', icon: 'none' })
+    uni.navigateTo({ url: '/pages/my-posts/index' })
 }
 const recommend = () => {
     uni.showToast({ title: '分享功能即将上线', icon: 'none' })

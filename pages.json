@@ -53,6 +53,13 @@
 			"style": {
 				"navigationBarTitleText": "follow"
 			}
+		},
+		{
+			"path": "pages/my-posts/index",
+			"style": {
+				"navigationBarTitleText": "我的动态",
+				"navigationStyle": "custom"
+			}
 		}
 	],
 	"globalStyle": {

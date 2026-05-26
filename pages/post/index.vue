@@ -6,7 +6,7 @@
                     <text class="pro__brand-logo">☰</text>
                     <text class="pro__brand-name h-display">RoomieMatch</text>
                 </view>
-                <text class="pro__bell">◎</text>
+                <CitySwitcher :model-value="currentCity" @change="onCityChange" />
             </view>
 
             <PostFilters ref="filtersRef" @filter="onFilter" />
@@ -41,32 +41,53 @@
 
 <script setup>
 import { ref, computed, reactive, onMounted } from 'vue'
-import { PROJECTS as MOCK_PROJECTS } from '@/sources/mock.js'
-import { fetchProjects } from '@/api/db.js'
+import { fetchProjects, fetchPeople } from '@/api/db.js'
 import { useUserStore } from '@/stores/user'
+import { rankPosts } from '@/utils/post-rank.js'
+import { DEFAULT_CITY_CODE } from '@/utils/cities.js'
 import PostCard from './components/PostCard.vue'
 import PostFilters from './components/PostFilters.vue'
 import PostModal from './components/PostModal.vue'
+import CitySwitcher from '@/components/CitySwitcher.vue'
 import Tabbar from '@/components/Tabbar.vue'
 
 const userStore = useUserStore()
 const filtersRef = ref(null)
 const modalOpen = ref(false)
 const posts = ref([])
+const peopleMap = ref({})  // { authorId: userObj }
 
-const currentUserId = computed(() => userStore.profile?.id || 'p01')
+const currentUserId = computed(() => userStore.profile?.id || userStore.uid || '')
+const currentCity = computed(() => userStore.profile?.city || DEFAULT_CITY_CODE)
+
+const onCityChange = (code) => {
+    userStore.setCity(code)
+}
+
+const buildPeopleMap = (list) => {
+    const map = {}
+    list.forEach(u => {
+        if (u.id) map[u.id] = u
+        if (u.wx_uid) map[u.wx_uid] = u
+        if (u._id) map[u._id] = u
+    })
+    return map
+}
 
 const loadPosts = async () => {
     try {
-        const data = await fetchProjects()
-        if (data && data.length) {
-            posts.value = data
-        } else {
-            posts.value = [...MOCK_PROJECTS]
-        }
+        const [postData, peopleData] = await Promise.all([
+            fetchProjects(),
+            fetchPeople()
+        ])
+        // 仅当云端完全没有数据时才用 mock 兜底（避免 mock 混入真实列表）
+        posts.value = postData?.length ? postData : []
+        const people = peopleData?.length ? peopleData : []
+        peopleMap.value = buildPeopleMap(people)
     } catch (e) {
-        console.warn('云数据库读取失败，使用 mock 数据', e)
-        posts.value = [...MOCK_PROJECTS]
+        console.warn('云数据库读取失败', e)
+        posts.value = []
+        peopleMap.value = {}
     }
 }
 
@@ -91,7 +112,20 @@ const onFilter = (f) => {
 
 const filteredList = computed(() => {
     const kw = filterState.keyword.trim().toLowerCase()
-    return posts.value.filter(p => {
+    const myId = currentUserId.value
+
+    // 1. 先过滤
+    const filtered = posts.value.filter(p => {
+        // 排除自己发的帖子
+        if (p.authorId === myId) return false
+
+        // 排除被我拉黑的人发的帖子
+        if (userStore.blockedIds?.includes(p.authorId)) return false
+
+        // 城市过滤（老数据没 city 字段默认归到上海）
+        const postCity = p.city || DEFAULT_CITY_CODE
+        if (postCity !== currentCity.value) return false
+
         if (filterState.type !== 'all' && p.postType !== filterState.type) return false
 
         if (filterState.tags.length) {
@@ -115,10 +149,19 @@ const filteredList = computed(() => {
 
         return true
     })
+
+    // 2. 混合排序（无筛选时按 harmony+时效，搜索时保持原序更直观）
+    if (kw || filterState.tags.length) return filtered
+    return rankPosts(filtered, userStore.profile, peopleMap.value)
 })
 
 const openProject = (j) => {
-    uni.navigateTo({ url: `/pages/post-detail/index?id=${j.id}` })
+    const pid = j.id || j._id
+    if (!pid) {
+        uni.showToast({ title: '帖子信息缺失', icon: 'none' })
+        return
+    }
+    uni.navigateTo({ url: `/pages/post-detail/index?id=${pid}` })
 }
 
 const removePost = async (j) => {
@@ -140,6 +183,7 @@ const removePost = async (j) => {
 const submitPost = async (formData) => {
     const newPost = {
         authorId: currentUserId.value,
+        city: currentCity.value,
         ...formData
     }
 

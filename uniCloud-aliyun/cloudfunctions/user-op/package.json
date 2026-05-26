@@ -1,0 +1,6 @@
+{
+  "name": "user-op",
+  "version": "1.0.0",
+  "description": "用户操作（拉黑/取消拉黑/举报）",
+  "main": "index.js"
+}

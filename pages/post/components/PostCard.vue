@@ -34,6 +34,7 @@
 import { computed } from 'vue'
 import { POST_TYPES, PEOPLE } from '@/sources/mock.js'
 import { useUserStore } from '@/stores/user'
+import { calcHarmony } from '@/utils/match.js'
 
 const props = defineProps({
     j: { type: Object, required: true },
@@ -48,18 +49,17 @@ const typeColor = computed(() => POST_TYPES[props.j.postType]?.color || '#6B6F6A
 const typeBg = computed(() => typeColor.value + '1A')
 
 const harmonyScore = computed(() => {
+    // 列表已计算过，优先用 _harmony 字段
+    if (typeof props.j._harmony === 'number') return props.j._harmony
+
     const me = userStore.profile
     const author = PEOPLE.find(p => p.id === props.j.authorId)
     if (!me?.dims || !author?.dims) return null
-    const dims = ['noise', 'schedule', 'tidy', 'social', 'finance', 'pets_vibe']
-    let score = 100
-    dims.forEach(k => {
-        score -= Math.abs((me.dims[k] || 3) - (author.dims[k] || 3)) * 3
-    })
-    ;(me.limits || []).forEach(t => {
-        if ((author.loves || []).includes(t)) score -= 15
-    })
-    return Math.max(40, Math.min(99, Math.round(score)))
+    try {
+        return calcHarmony(me, author).score
+    } catch {
+        return null
+    }
 })
 
 const openDetail = () => emit('open', props.j)

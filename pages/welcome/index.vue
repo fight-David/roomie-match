@@ -54,6 +54,7 @@ const goOnboarding = async () => {
 
         // 加载关系数据
         await Promise.all([
+            userStore.loadBlockedIds(),
             messageStore.loadConversations(),
             followStore.loadRelations()
         ])

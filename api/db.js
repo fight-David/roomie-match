@@ -31,8 +31,15 @@ export async function fetchPeople() {
 }
 
 export async function findPerson(id) {
-  const data = await callQuery('harmony-users', { id })
-  return data[0] || null
+  if (!id) return null
+  let data = await callQuery('harmony-users', { id })
+  if (!data?.length) {
+    data = await callQuery('harmony-users', { wx_uid: id })
+  }
+  if (!data?.length) {
+    data = await callQuery('harmony-users', { _id: id })
+  }
+  return data?.[0] || null
 }
 
 // ===== 帖子 =====
@@ -41,8 +48,13 @@ export async function fetchProjects() {
 }
 
 export async function findProject(id) {
-  const data = await callQuery('harmony-posts', { id })
-  return data[0] || null
+  if (!id) return null
+  // 同时尝试 id 和 _id 两种字段（兼容云端自增 _id 与自定义 id）
+  let data = await callQuery('harmony-posts', { id })
+  if (!data?.length) {
+    data = await callQuery('harmony-posts', { _id: id })
+  }
+  return data?.[0] || null
 }
 
 // ===== 评论 =====

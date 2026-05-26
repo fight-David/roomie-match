@@ -32,9 +32,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { getFilterSugs, DEFAULT_CITY_CODE } from '@/utils/cities.js'
 
 const emit = defineEmits(['filter'])
+const userStore = useUserStore()
 
 const keyword = ref('')
 const type = ref('all')
@@ -48,7 +51,15 @@ const postTypes = [
     { v: 'pure_match', label: '先认识人' }
 ]
 
-const sugs = ['9号线', '10号线', '12号线', '静安', '张江', '养猫', '养花', '阳台', '晨型', '设计师', '程序员', '先认识']
+// 当前城市 → 联动建议标签
+const currentCity = computed(() => userStore.profile?.city || DEFAULT_CITY_CODE)
+const sugs = computed(() => getFilterSugs(currentCity.value))
+
+// 切换城市时，把已选标签里"不属于新城市"的清掉
+watch(currentCity, () => {
+    activeTags.value = activeTags.value.filter(t => sugs.value.includes(t))
+    emitFilter()
+})
 
 const resultCount = ref(0)
 

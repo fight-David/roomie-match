@@ -9,36 +9,30 @@
             <view class="pjd__back h-safe-top" @tap="back">
                 <text class="pjd__back-icon">‹</text>
             </view>
-
-            <!-- 帖子类型浮标 -->
-            <view class="pjd__type-badge" :style="badgeStyle">
-                <text>{{ typeLabel }}</text>
-            </view>
         </view>
 
         <!-- 无图时顶部导航栏 -->
         <view v-else class="pjd__nav h-safe-top">
             <view class="pjd__nav-bar">
                 <text class="pjd__nav-back" @tap="back">‹</text>
-                <view class="pjd__nav-badge" :style="badgeStyle">
-                    <text>{{ typeLabel }}</text>
-                </view>
             </view>
         </view>
 
         <!-- ===== 主体内容 ===== -->
         <view class="pjd__body">
+
+            <!-- 帖子类型徽章（主体内显眼位置） -->
+            <view class="pjd__type-badge" :style="badgeStyle">
+                <text class="pjd__type-dot"></text>
+                <text>{{ typeLabel }}</text>
+            </view>
+
             <PostHeader :post="project" />
             <PostTags :tags="project.tags" />
 
             <view class="pjd__rule"></view>
 
-            <PostAuthor
-                :author="author"
-                :role-label="typeLabel"
-                :harmony="harmonyScore"
-                @open="openAuthor"
-            />
+            <PostAuthor :author="author" :role-label="typeLabel" :harmony="harmonyScore" @open="openAuthor" />
 
             <view class="pjd__rule"></view>
 
@@ -50,22 +44,9 @@
         <!-- ===== 底部：评论输入 + 联系按钮 ===== -->
         <view class="pjd__footer h-safe-bottom">
             <view class="pjd__input-wrap">
-                <input
-                    class="pjd__input"
-                    placeholder="说点什么…"
-                    placeholder-class="pjd__input-ph"
-                    v-model="commentText"
-                    @confirm="sendComment"
-                    confirm-type="send"
-                />
-                <text
-                    class="pjd__send"
-                    :class="{ 'is-on': !!commentText }"
-                    @tap="sendComment"
-                >发</text>
-            </view>
-            <view class="pjd__contact" @tap="openAuthor(author.id)">
-                <text>联系 TA</text>
+                <input class="pjd__input" placeholder="说点什么…" placeholder-class="pjd__input-ph" v-model="commentText"
+                    @confirm="sendComment" confirm-type="send" />
+                <text class="pjd__send" :class="{ 'is-on': !!commentText }" @tap="sendComment">发送</text>
             </view>
         </view>
 
@@ -78,6 +59,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { PROJECTS as MOCK_PROJECTS, PEOPLE, POST_TYPES } from '@/sources/mock.js'
 import { findProject, findPerson, fetchComments } from '@/api/db.js'
 import { useUserStore } from '@/stores/user'
+import { calcHarmony } from '@/utils/match.js'
 import PostGallery from './components/PostGallery.vue'
 import PostHeader from './components/PostHeader.vue'
 import PostTags from './components/PostTags.vue'
@@ -107,20 +89,16 @@ const badgeStyle = computed(() => ({
     borderColor: 'transparent'
 }))
 
-// 实时计算 harmony（基于维度差值 + limits 命中惩罚）
+// 实时计算 harmony（统一用 utils/match.js）
 const harmonyScore = computed(() => {
     const me = userStore.profile
     const other = author.value
     if (!me?.dims || !other?.dims) return null
-    const dims = ['noise', 'schedule', 'tidy', 'social', 'finance', 'pets_vibe']
-    let score = 100
-    dims.forEach(k => {
-        score -= Math.abs((me.dims[k] || 3) - (other.dims[k] || 3)) * 3
-    })
-    ;(me.limits || []).forEach(t => {
-        if ((other.loves || []).includes(t)) score -= 15
-    })
-    return Math.max(40, Math.min(99, Math.round(score)))
+    try {
+        return calcHarmony(me, other).score
+    } catch {
+        return null
+    }
 })
 
 onLoad(async (q) => {
@@ -239,16 +217,24 @@ const sendComment = async () => {
     }
 
     &__type-badge {
-        position: absolute;
-        bottom: $space-3;
-        left: $space-3;
-        z-index: 20;
+        display: inline-flex;
+        align-items: center;
+        gap: 10rpx;
         padding: 10rpx 24rpx;
         border-radius: $radius-pill;
         font-size: 22rpx;
         font-weight: 500;
-        letter-spacing: 1.5rpx;
-        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, .25);
+        letter-spacing: 2rpx;
+        margin-bottom: $space-3;
+        box-shadow: 0 6rpx 20rpx rgba(82, 98, 83, .18);
+    }
+
+    &__type-dot {
+        width: 10rpx;
+        height: 10rpx;
+        border-radius: 50%;
+        background: #fff;
+        opacity: .9;
     }
 
     // ── 无图时：顶部导航栏 ──
@@ -273,14 +259,6 @@ const sendComment = async () => {
         height: 88rpx;
         line-height: 88rpx;
         flex-shrink: 0;
-    }
-
-    &__nav-badge {
-        padding: 10rpx 24rpx;
-        border-radius: $radius-pill;
-        font-size: 22rpx;
-        font-weight: 500;
-        letter-spacing: 1.5rpx;
     }
 
     // ── 主体 ──
@@ -345,9 +323,10 @@ const sendComment = async () => {
     }
 
     &__send {
-        width: 56rpx;
+        // width: 56rpx;
         height: 56rpx;
-        border-radius: 50%;
+        padding: 10rpx 40rpx;
+        border-radius: $radius-pill;
         display: flex;
         align-items: center;
         justify-content: center;

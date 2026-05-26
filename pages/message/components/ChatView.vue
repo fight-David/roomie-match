@@ -30,17 +30,58 @@
 </template>
 
 <script setup>
-import { ref, nextTick, watch } from 'vue'
+import { ref, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useMessageStore } from '@/stores/message'
 
 const props = defineProps({
     conversation: { type: Object, required: true }
 })
 
 const emit = defineEmits(['close', 'send'])
+const messageStore = useMessageStore()
 
 const text = ref('')
 const scrollTop = ref(0)
 const inputRef = ref(null)
+
+// ── 轮询机制（每 3 秒拉一次最新消息）──
+const POLL_INTERVAL = 3000
+let pollTimer = null
+
+const startPolling = () => {
+    stopPolling()
+    if (!props.conversation?.id) return
+    pollTimer = setInterval(() => {
+        messageStore.loadMessages(props.conversation.id)
+    }, POLL_INTERVAL)
+}
+
+const stopPolling = () => {
+    if (pollTimer) {
+        clearInterval(pollTimer)
+        pollTimer = null
+    }
+}
+
+onMounted(() => {
+    // 进入时立即拉一次
+    if (props.conversation?.id) {
+        messageStore.loadMessages(props.conversation.id)
+    }
+    startPolling()
+})
+
+onBeforeUnmount(stopPolling)
+
+// 切换会话时重启轮询
+watch(() => props.conversation?.id, (newId) => {
+    if (newId) {
+        messageStore.loadMessages(newId)
+        startPolling()
+    } else {
+        stopPolling()
+    }
+})
 
 const scrollToBottom = () => {
     scrollTop.value = 0
@@ -54,7 +95,6 @@ const onScroll = (e) => {
 }
 
 // 初次进入和消息变化时都滚到底部
-// 用 immediate + 延迟确保 DOM 已渲染
 watch(() => props.conversation?.messages?.length, () => {
     setTimeout(scrollToBottom, 100)
 }, { immediate: true })
@@ -64,11 +104,6 @@ const send = () => {
     emit('send', text.value)
     text.value = ''
     scrollToBottom()
-    // 聚焦输入框
-    nextTick(() => {
-        const el = document.querySelector('.cv__input input')
-        if (el) el.focus()
-    })
 }
 </script>
 

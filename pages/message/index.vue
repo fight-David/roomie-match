@@ -27,8 +27,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, onBeforeUnmount } from 'vue'
+import { onLoad, onShow, onHide } from '@dcloudio/uni-app'
 import { useMessageStore } from '@/stores/message'
 import ConversationList from './components/ConversationList.vue'
 import ChatView from './components/ChatView.vue'
@@ -36,6 +36,24 @@ import Tabbar from '@/components/Tabbar.vue'
 
 const messageStore = useMessageStore()
 const activeChat = ref(null)
+
+// ── 会话列表轮询（页面活跃时每 5 秒）──
+const LIST_POLL_INTERVAL = 5000
+let listPollTimer = null
+
+const startListPolling = () => {
+    stopListPolling()
+    listPollTimer = setInterval(() => {
+        messageStore.loadConversations()
+    }, LIST_POLL_INTERVAL)
+}
+
+const stopListPolling = () => {
+    if (listPollTimer) {
+        clearInterval(listPollTimer)
+        listPollTimer = null
+    }
+}
 
 onLoad(async (q) => {
     if (!messageStore.conversations.length) {
@@ -49,6 +67,15 @@ onLoad(async (q) => {
         }
     }
 })
+
+onShow(() => {
+    // 每次回到页面都拉一次最新，并启动轮询
+    messageStore.loadConversations()
+    startListPolling()
+})
+
+onHide(stopListPolling)
+onBeforeUnmount(stopListPolling)
 
 const openChat = (c) => {
     activeChat.value = c
