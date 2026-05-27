@@ -18,7 +18,7 @@ export const CITIES = [
     subwayLines: [
       '1号线', '2号线', '3号线', '4号线', '6号线', '7号线', '8号线',
       '9号线', '10号线', '11号线', '12号线', '13号线', '15号线',
-      '17号线', '18号线'
+      '17号线', '18号线', "浦江线"
     ],
     extraTags: ['张江', '陆家嘴']
   },
@@ -111,5 +111,30 @@ export function getFilterSugs(code) {
     ...(city.extraTags || []),
     ...COMMON_TAGS
   ]
+}
+
+// ── 地铁线路标准化 ──
+// 统一转成纯数字字符串，特殊线路保留名称
+// 支持：'1号线' → '1'，'1' → '1'，'浦江线' → '浦江'，'S1号线' → 'S1'
+export function normalizeSubwayLine(raw) {
+  if (!raw) return ''
+  const s = String(raw).trim()
+  // 去掉"号线"后缀
+  const stripped = s.replace(/号线$/, '').trim()
+  return stripped
+}
+
+// 标准化一组地铁线路
+export function normalizeSubwayLines(arr = []) {
+  return arr.map(normalizeSubwayLine).filter(Boolean)
+}
+
+// 显示用：把标准化后的值加回"号线"（纯数字或字母数字加"号线"，其他保留）
+export function displaySubwayLine(normalized) {
+  if (!normalized) return ''
+  // 纯数字 或 字母+数字（如 S1）→ 加"号线"
+  if (/^[A-Za-z]?\d+$/.test(normalized)) return normalized + '号线'
+  // 其他（如"浦江"）→ 直接显示
+  return normalized
 }
 

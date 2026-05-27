@@ -1,65 +1,3 @@
-export const RED_TAGS = [
-  '做饭', '安静', '早睡', '健身', '游戏', '猫',      // 核心高频合租重合项
-  '夜跑', '篮球', '骑行', '爬山', '露营',            // 运动/户外活动 (原 sport 演变)
-  '咖啡', '阅读', '摄影', '陶艺', '植物'             // 休闲/生活情调
-];
-
-// 🔴 Dark List (一票否决/雷区/生活陋习)
-// 综合了您的：抽烟、吵闹、不洗碗、带外人过夜、养狗、不关灯、拖鞋乱丢、熬夜打游戏、邋遢、带人回家、制造噪音
-export const BLACK_TAGS = [
-  '抽烟',               // 绝对一票否决项
-  '邋遢', '不洗碗', '拖鞋乱丢', // 卫生雷区 (原 clean 细化)
-  '带人回家', '带外人过夜',     // 社交雷区 (原 social 细化)
-  '制造噪音', '吵闹',          // 声响雷区 (原 noise 细化)
-  '不关灯', '熬夜打游戏',       // 作息雷区 (原 sleep 细化)
-  '养狗'
-]
-
-export const DIMENSIONS = [
-  {
-    key: 'noise',
-    label: '声响',
-    top: '喜欢热闹',
-    bottom: '喜欢安静'
-  },
-
-  {
-    key: 'schedule',
-    label: '作息',
-    top: '早睡党',
-    bottom: '夜猫子'
-  },
-
-  {
-    key: 'tidy',
-    label: '整洁',
-    top: '爱干净',
-    bottom: '随性'
-  },
-
-  {
-    key: 'social',
-    label: '社交',
-    top: '喜欢交流',
-    bottom: '注重边界'
-  },
-
-  {
-    key: 'finance',
-    label: '财务',
-    top: 'AA清晰',
-    bottom: '差不多就行'
-  },
-
-  {
-    key: 'pets_vibe',
-    label: '宠物',
-    top: '喜欢宠物',
-    bottom: '保持距离'
-  }
-]
-
-
 export const PEOPLE = [
   // ———— 男性 ————
   {
@@ -266,12 +204,6 @@ export const PEOPLE = [
   },
 ]
 
-export const POST_TYPES = {
-  have_room: { label: '有房招友', color: '#526253' },
-  seek_room: { label: '搭子找房', color: '#A87063' },
-  pure_match: { label: '先认识人', color: '#6B6F6A' }
-}
-
 export const PROJECTS = [
   {
     id: 'j01', authorId: 'p01',
@@ -323,31 +255,6 @@ export const PROJECTS = [
     updated_at: 1747800000000,
   },
 ]
-
-export function findPerson(id) {
-  return PEOPLE.find(p => p.id === id) || PEOPLE[0]
-}
-
-export function personaOf(p) {
-  if (p.persona && p.persona.length) return p.persona
-  const out = []
-  const d = p.dims || {}
-  if (d.schedule >= 65) out.push('晨型')
-  else if (d.schedule <= 40) out.push('深夜派')
-  if (d.tidy >= 80) out.push('极度整洁')
-  if (d.social <= 35) out.push('非社交型')
-  if (d.cooking >= 70) out.push('爱下厨')
-  if (d.pets >= 80) out.push('爱毛孩')
-  if ((p.red || []).some(x => /猫/.test(x))) out.push('养猫')
-  if ((p.red || []).some(x => /植物|花/.test(x))) out.push('植物系')
-  if ((p.red || []).some(x => /咖啡/.test(x))) out.push('咖啡党')
-  if ((p.red || []).some(x => /黑胶|爵士/.test(x))) out.push('黑胶党')
-  return out.slice(0, 4)
-}
-
-export function findProject(id) {
-  return PROJECTS.find(p => p.id === id) || PROJECTS[0]
-}
 
 // ---------- 消息 ----------
 export const CONVERSATIONS = [

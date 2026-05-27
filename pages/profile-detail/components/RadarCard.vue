@@ -13,7 +13,7 @@
 <script setup>
 import { computed } from 'vue'
 import RadarChart from '@/components/RadarChart.vue'
-import { DIMENSIONS } from '@/sources/mock.js'
+import { DIMENSIONS } from '@/utils/constant'
 
 const props = defineProps({
     dims: { type: Object, default: () => ({}) }

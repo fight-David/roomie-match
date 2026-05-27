@@ -1,14 +1,8 @@
-/**
- * 云数据库读取封装
- * 从 uniCloud 读取数据，格式与 mock 保持一致
- * 通过云函数查询，绕过客户端 token 权限限制
- *
- * 使用方式：
- *   import { fetchPeople, fetchProjects, findPerson, findProject } from '@/api/db.js'
- */
+// api/db.js — 云数据库读取封装
+// 通过云函数查询，绕过客户端 token 权限限制
 
-// ===== 通用查询云函数 =====
-// 直接走云函数（项目使用自定义 token，不走 clientDB 避免 split 报错）
+import { DEFAULT_CITY_CODE } from '@/utils/cities.js'
+
 async function callQuery(collection, where = {}, options = {}) {
   try {
     const res = await uniCloud.callFunction({
@@ -26,34 +20,55 @@ async function callQuery(collection, where = {}, options = {}) {
 }
 
 // ===== 用户 =====
-export async function fetchPeople() {
-  return callQuery('harmony-users')
+
+// 按城市拉取用户列表（city 字段缺失的老数据默认归上海）
+export async function fetchPeople(city) {
+  const targetCity = city || DEFAULT_CITY_CODE
+  // 先拉当前城市的用户，再拉没有 city 字段的老数据（兼容历史数据）
+  const [withCity, noCity] = await Promise.all([
+    callQuery('harmony-users', { city: targetCity }),
+    callQuery('harmony-users', { city: null })
+  ])
+  // 合并去重（以 _id 为准）
+  const seen = new Set()
+  return [...withCity, ...noCity].filter(u => {
+    const id = u._id || u.wx_uid
+    if (seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
 }
 
 export async function findPerson(id) {
   if (!id) return null
   let data = await callQuery('harmony-users', { id })
-  if (!data?.length) {
-    data = await callQuery('harmony-users', { wx_uid: id })
-  }
-  if (!data?.length) {
-    data = await callQuery('harmony-users', { _id: id })
-  }
+  if (!data?.length) data = await callQuery('harmony-users', { wx_uid: id })
+  if (!data?.length) data = await callQuery('harmony-users', { _id: id })
   return data?.[0] || null
 }
 
 // ===== 帖子 =====
-export async function fetchProjects() {
-  return callQuery('harmony-posts')
+
+// 按城市拉取帖子（city 字段缺失的老数据默认归上海）
+export async function fetchProjects(city) {
+  const targetCity = city || DEFAULT_CITY_CODE
+  const [withCity, noCity] = await Promise.all([
+    callQuery('harmony-posts', { city: targetCity }),
+    callQuery('harmony-posts', { city: null })
+  ])
+  const seen = new Set()
+  return [...withCity, ...noCity].filter(p => {
+    const id = p._id || p.id
+    if (seen.has(id)) return false
+    seen.add(id)
+    return true
+  })
 }
 
 export async function findProject(id) {
   if (!id) return null
-  // 同时尝试 id 和 _id 两种字段（兼容云端自增 _id 与自定义 id）
   let data = await callQuery('harmony-posts', { id })
-  if (!data?.length) {
-    data = await callQuery('harmony-posts', { _id: id })
-  }
+  if (!data?.length) data = await callQuery('harmony-posts', { _id: id })
   return data?.[0] || null
 }
 

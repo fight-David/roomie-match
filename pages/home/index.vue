@@ -64,7 +64,7 @@ const goDetail = (p) => {
 
 onMounted(async () => {
   try {
-    const data = await fetchPeople()
+    const data = await fetchPeople(currentCity.value)
     people.value = data && data.length ? data : []
   } catch (e) {
     console.warn('云数据库读取失败', e)

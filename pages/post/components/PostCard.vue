@@ -32,7 +32,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { POST_TYPES, PEOPLE } from '@/sources/mock.js'
+import { POST_TYPES, PEOPLE } from '@/utils/constant'
 import { useUserStore } from '@/stores/user'
 import { calcHarmony } from '@/utils/match.js'
 

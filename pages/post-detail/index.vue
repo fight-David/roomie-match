@@ -56,7 +56,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { PROJECTS as MOCK_PROJECTS, PEOPLE, POST_TYPES } from '@/sources/mock.js'
+import { PROJECTS as MOCK_PROJECTS, PEOPLE } from '@/sources/mock.js'
+import { POST_TYPES } from '@/utils/constant'
 import { findProject, findPerson, fetchComments } from '@/api/db.js'
 import { useUserStore } from '@/stores/user'
 import { calcHarmony } from '@/utils/match.js'

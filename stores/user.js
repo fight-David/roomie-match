@@ -11,7 +11,7 @@ export const useUserStore = defineStore('user', {
     // profile 初始用 mock 数据保底
     profile: {
       id: 'p01',
-      nickname: 'Ethan Wu',
+      nickname: '',
       target_gender: '',
       city: 'SH',
       budget_min: 2000,
@@ -28,9 +28,6 @@ export const useUserStore = defineStore('user', {
         schedule: null,
         tidy: null,
         social: null,
-        noise: null,
-        finance: null,
-        pets_vibe: null,
       },
       loves: [],
       limits: [],

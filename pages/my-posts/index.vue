@@ -62,7 +62,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { PROJECTS as MOCK_PROJECTS, POST_TYPES } from '@/sources/mock.js'
+import { PROJECTS as MOCK_PROJECTS, POST_TYPES } from '@/utils/constant'
 import { fetchProjects } from '@/api/db.js'
 import { useUserStore } from '@/stores/user'
 

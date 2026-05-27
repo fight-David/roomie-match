@@ -10,8 +10,7 @@
         </view>
         <view class="onb__tags">
             <tag v-for="t in redPool" :key="'r' + t" tone="red" :active="red.includes(t)"
-                :class="{ 'is-disabled': !red.includes(t) && red.length >= MAX }"
-                @tap="toggle('red', t)">{{ t }}
+                :class="{ 'is-disabled': !red.includes(t) && red.length >= MAX }" @tap="toggle('red', t)">{{ t }}
             </tag>
 
             <view class="onb__add" hover-class="onb__add--press" :hover-stay-time="80" @tap="openAdd('red')">
@@ -28,8 +27,7 @@
         </view>
         <view class="onb__tags">
             <tag v-for="t in blackPool" :key="'b' + t" tone="black" :active="black.includes(t)"
-                :class="{ 'is-disabled': !black.includes(t) && black.length >= MAX }"
-                @tap="toggle('black', t)">{{ t }}
+                :class="{ 'is-disabled': !black.includes(t) && black.length >= MAX }" @tap="toggle('black', t)">{{ t }}
             </tag>
 
             <view class="onb__add" hover-class="onb__add--press" :hover-stay-time="80" @tap="openAdd('black')">
@@ -42,19 +40,11 @@
         <view v-if="addOpen" class="onb__overlay" @tap="closeAdd">
             <view class="onb__modal" @tap.stop>
                 <view class="onb__modal-title">添加{{ addKind === 'red' ? '热爱' : '底线' }}</view>
-                <input
-                    class="onb__modal-input"
-                    :value="addText"
-                    @input="e => addText = e.detail.value"
-                    placeholder="输入你想添加的内容"
-                    placeholder-class="onb__modal-placeholder"
-                    maxlength="20"
-                    :focus="true"
-                />
+                <input class="onb__modal-input" :value="addText" @input="e => addText = e.detail.value"
+                    placeholder="输入你想添加的内容" placeholder-class="onb__modal-placeholder" maxlength="20" :focus="true" />
                 <view class="onb__modal-actions">
                     <view class="onb__modal-btn onb__modal-btn--cancel" @tap="closeAdd">取消</view>
-                    <view class="onb__modal-btn onb__modal-btn--confirm"
-                        :class="{ 'is-disabled': !addText.trim() }"
+                    <view class="onb__modal-btn onb__modal-btn--confirm" :class="{ 'is-disabled': !addText.trim() }"
                         @tap="confirmAdd">添加</view>
                 </view>
             </view>
@@ -64,11 +54,11 @@
 
 <script setup>
 import Tag from '@/components/Tag.vue'
-import { RED_TAGS, BLACK_TAGS } from '@/sources/mock.js'
+import { RED_TAGS, BLACK_TAGS } from '@/utils/constant'
 import { ref } from 'vue'
 
 const props = defineProps({
-  modelValue: { type: Object, default: () => ({}) }
+    modelValue: { type: Object, default: () => ({}) }
 })
 const emit = defineEmits(['updateUserProfile'])
 
@@ -196,7 +186,10 @@ const confirmAdd = () => {
     &__overlay {
         position: fixed;
         z-index: 100;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: rgba(0, 0, 0, 0.3);
         display: flex;
         align-items: center;
@@ -271,12 +264,24 @@ const confirmAdd = () => {
 }
 
 @keyframes onb-fade-in {
-    from { opacity: 0 }
-    to   { opacity: 1 }
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
 }
 
 @keyframes onb-scale-in {
-    from { transform: scale(0.92); opacity: 0 }
-    to   { transform: scale(1); opacity: 1 }
+    from {
+        transform: scale(0.92);
+        opacity: 0
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1
+    }
 }
 </style>

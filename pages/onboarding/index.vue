@@ -137,11 +137,7 @@ const next = async () => {
 
         uni.hideLoading()
 
-        if (isRecalibrate.value) {
-          uni.navigateBack()
-        } else {
-          uni.reLaunch({ url: '/pages/home/index' })
-        }
+        uni.reLaunch({ url: '/pages/persona/index' })
     }
 }
 </script>

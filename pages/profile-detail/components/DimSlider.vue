@@ -1,55 +1,37 @@
 <template>
-    <view class="ds">
-        <!-- Header -->
+    <view class="ds" :class="{ 'ds--readonly': readonly }">
         <view class="ds__head">
-            <text class="ds__title">生活维度</text>
+            <text class="ds__title">生活方式</text>
             <text class="ds__hint">{{ hintText }}</text>
         </view>
 
-        <!-- Radar -->
-        <view class="ds__radar">
-            <RadarChart :values="values" :labels="labels" :size="320" :max-value="5" tone="primary" />
-        </view>
-
-        <!-- List -->
         <view class="ds__list">
-            <view class="ds__item" v-for="d in dimList" :key="d.key">
-                <!-- label -->
-                <view class="ds__item-head">
-                    <text class="ds__item-label">
-                        {{ d.label }}
-                    </text>
-
-                    <text class="ds__item-val">
-                        {{ dims[d.key] || 3 }}
-                    </text>
+            <view class="ds__item" v-for="d in DIMENSIONS" :key="d.key">
+                <view class="ds__axis">
+                    <text class="ds__axis-left">{{ d.left }}</text>
+                    <view class="ds__axis-right-wrap">
+                        <text class="ds__score" v-if="!readonly">{{ dims[d.key] || 3 }}</text>
+                        <text class="ds__axis-right">{{ d.right }}</text>
+                    </view>
                 </view>
 
-                <!-- slider -->
-                <view class="ds__slider-track" :data-key="d.key" @touchstart="startTrackDrag(d.key)"
-                    @touchmove.stop.prevent="moveTrackDrag" @touchend="endTrackDrag">
-                    <view class="ds__slider-fill" :style="{
-                        width: percentFromValue(
-                            dims[d.key] || 3
-                        )
-                    }" />
-
-                    <view class="ds__slider-thumb" :style="{
-                        left: percentFromValue(
-                            dims[d.key] || 3
-                        )
-                    }" />
-                </view>
-
-                <!-- labels -->
-                <view class="ds__slider-labels">
-                    <text class="ds__slider-low">
-                        {{ d.bottom }}
-                    </text>
-
-                    <text class="ds__slider-high">
-                        {{ d.top }}
-                    </text>
+                <view
+                    class="ds__track"
+                    :data-key="d.key"
+                    @touchstart="readonly ? null : startDrag(d.key)"
+                    @touchmove.stop.prevent="readonly ? null : moveDrag($event)"
+                    @touchend="readonly ? null : endDrag()"
+                >
+                    <view class="ds__track-bg"></view>
+                    <view
+                        class="ds__track-fill"
+                        :style="{ width: toPercent(dims[d.key] || 3) }"
+                    ></view>
+                    <view class="ds__track-center"></view>
+                    <view
+                        class="ds__thumb"
+                        :style="{ left: toPercent(dims[d.key] || 3) }"
+                    ></view>
                 </view>
             </view>
         </view>
@@ -58,288 +40,341 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import RadarChart from '@/components/RadarChart.vue'
-import { DIMENSIONS } from '@/sources/mock.js'
+import { DIMENSIONS } from '@/utils/constant'
 
 const props = defineProps({
-    dims: {
-        type: Object,
-        default: () => ({})
-    }
+    dims: { type: Object, default: () => ({}) },
+    readonly: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:dims'])
 
-// =========================
-// data
-// =========================
-const dimList = computed(() => DIMENSIONS)
+const toPercent = (v) => ((v - 1) / 4 * 100) + '%'
 
-const labels = computed(() =>
-    DIMENSIONS.map(d => d.label)
-)
-
-const values = computed(() =>
-    DIMENSIONS.map(
-        d => props.dims[d.key] || 3
-    )
-)
-
-// =========================
-// value => percent
-// 1~5 => 0~100%
-// =========================
-const percentFromValue = (v) => {
-    return ((v - 1) / 4) * 100 + '%'
-}
-
-// =========================
-// hint
-// =========================
 const hintText = computed(() => {
-    const v = values.value
-
-    const max = Math.max(...v)
-    const min = Math.min(...v)
-
-    if (max - min <= 1) {
-        return '均衡'
-    }
-
-    return '偏好鲜明'
+    const vals = DIMENSIONS.map(d => props.dims[d.key] || 3)
+    const spread = Math.max(...vals) - Math.min(...vals)
+    if (spread <= 1) return '均衡'
+    if (spread >= 3) return '偏好鲜明'
+    return '有自己的节奏'
 })
 
-// =========================
-// slider
-// =========================
 const draggingKey = ref(null)
+const { windowWidth } = uni.getWindowInfo()
+const PADDING = 32
 
+const startDrag = (key) => { draggingKey.value = key }
 
-// 页面左右边距
-const sliderLeft = 32
-
-const windowInfo = uni.getWindowInfo()
-// slider 宽度
-const sliderWidth =
-  windowInfo.windowWidth - 64
-
-// 开始拖动
-const startTrackDrag = (key) => {
-    draggingKey.value = key
-}
-
-// 拖动中
-const moveTrackDrag = (e) => {
+const moveDrag = (e) => {
     if (!draggingKey.value) return
-
     const touch = e.touches?.[0]
-
     if (!touch) return
-
-    let x = touch.clientX - sliderLeft
-
-    x = Math.max(
-        0,
-        Math.min(sliderWidth, x)
-    )
-
-    const ratio = x / sliderWidth
-
-    const val =
-        Math.round(ratio * 4) + 1
-
-    const newDims = {
-        ...props.dims,
-        [draggingKey.value]: val
-    }
-
-    emit('update:dims', newDims)
+    const trackWidth = windowWidth - PADDING * 2
+    let x = touch.clientX - PADDING
+    x = Math.max(0, Math.min(trackWidth, x))
+    const val = Math.round((x / trackWidth) * 4) + 1
+    emit('update:dims', { ...props.dims, [draggingKey.value]: val })
 }
 
-// 结束拖动
-const endTrackDrag = () => {
-    draggingKey.value = null
-}
+const endDrag = () => { draggingKey.value = null }
 </script>
 
 <style lang="scss" scoped>
 .ds {
     background: #fff;
-
     border-radius: 32rpx;
-
     padding: $space-4;
+
+    // readonly 模式：背景更淡，无白底卡片感
+    &--readonly {
+        background: transparent;
+        padding: $space-3 0;
+    }
 
     &__head {
         display: flex;
-
         justify-content: space-between;
-
         align-items: center;
-
-        margin-bottom: $space-3;
+        margin-bottom: $space-4;
     }
 
     &__title {
         font-size: 24rpx;
-
         color: $color-ink-soft;
-
         font-weight: 500;
-
         letter-spacing: 1rpx;
     }
 
     &__hint {
         font-size: 20rpx;
-
         color: $color-ink-ghost;
-
         letter-spacing: 1rpx;
-    }
-
-    &__radar {
-        display: flex;
-
-        justify-content: center;
-
-        padding: 0 0 $space-3;
     }
 
     &__list {
         display: flex;
-
         flex-direction: column;
-
-        gap: 24rpx;
+        gap: $space-4;
     }
 
-    &__item-head {
+    &__item {
         display: flex;
+        flex-direction: column;
+        gap: 12rpx;
+    }
 
+    &__axis {
+        display: flex;
         justify-content: space-between;
-
         align-items: center;
-
-        margin-bottom: 6rpx;
     }
 
-    &__item-label {
+    &__axis-left {
         font-size: 22rpx;
-
         color: $color-ink-soft;
-
-        font-weight: 500;
+        letter-spacing: 0.5rpx;
+        line-height: 1.4;
+        max-width: 44%;
     }
 
-    &__item-val {
-        font-size: 22rpx;
-
-        color: $color-ink;
-
-        min-width: 32rpx;
-
-        text-align: center;
-    }
-
-    /* =========================
-       slider
-    ========================= */
-
-    &__slider-track {
-        position: relative;
-
-        height: 40rpx;
-
+    &__axis-right-wrap {
         display: flex;
-
         align-items: center;
-
-        touch-action: none;
+        gap: 12rpx;
+        max-width: 50%;
     }
 
-    &__slider-track::before {
-        content: '';
+    &__score {
+        font-size: 28rpx;
+        font-weight: 500;
+        color: #526253;
+        min-width: 24rpx;
+        text-align: center;
+        letter-spacing: -0.5rpx;
+    }
 
+    &__axis-right {
+        font-size: 22rpx;
+        color: $color-ink-soft;
+        letter-spacing: 0.5rpx;
+        line-height: 1.4;
+        text-align: right;
+    }
+
+    &__track {
+        position: relative;
+        height: 48rpx;
+        display: flex;
+        align-items: center;
+        touch-action: none;
+
+        // readonly 时轨道更细更轻
+        .ds--readonly & {
+            height: 36rpx;
+        }
+    }
+
+    &__track-bg {
         position: absolute;
-
         left: 0;
         right: 0;
-
-        top: 50%;
-
-        height: 8rpx;
-
-        transform: translateY(-50%);
-
-        background: #e5e9e5;
-
+        height: 6rpx;
         border-radius: 999rpx;
+        background: #e8ece8;
 
-        pointer-events: none;
+        .ds--readonly & {
+            height: 4rpx;
+        }
     }
 
-    &__slider-fill {
+    &__track-fill {
         position: absolute;
-
         left: 0;
-
         top: 50%;
-
-        height: 8rpx;
-
+        height: 6rpx;
         transform: translateY(-50%);
-
         border-radius: 999rpx;
-
         background: #526253;
-
         pointer-events: none;
+        transition: width .08s;
 
-        transition: none;
+        .ds--readonly & {
+            height: 4rpx;
+            opacity: .75;
+        }
     }
 
-    &__slider-thumb {
+    &__track-center {
         position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2rpx;
+        height: 16rpx;
+        background: rgba(255, 255, 255, .8);
+        border-radius: 2rpx;
+        z-index: 1;
 
+        .ds--readonly & {
+            height: 12rpx;
+        }
+    }
+
+    &__thumb {
+        position: absolute;
         top: 50%;
-
         transform: translate(-50%, -50%);
-
-        width: 28rpx;
-
-        height: 28rpx;
-
+        width: 36rpx;
+        height: 36rpx;
         border-radius: 50%;
-
         background: #fff;
-
-        border: 2rpx solid #526253;
-
-        box-shadow: 0 2rpx 8rpx rgba(82, 98, 83, 0.3);
-
+        border: 3rpx solid #526253;
+        box-shadow: 0 4rpx 12rpx rgba(82, 98, 83, .28);
         pointer-events: none;
+        z-index: 2;
 
+        // readonly：滑块更小更克制
+        .ds--readonly & {
+            width: 24rpx;
+            height: 24rpx;
+            border-width: 2rpx;
+            box-shadow: 0 2rpx 8rpx rgba(82, 98, 83, .18);
+        }
+    }
+}
+</style>
+
+<style lang="scss" scoped>
+.ds {
+    background: #fff;
+    border-radius: 32rpx;
+    padding: $space-4;
+
+    &__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $space-4;
+    }
+
+    &__title {
+        font-size: 24rpx;
+        color: $color-ink-soft;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+    }
+
+    &__hint {
+        font-size: 20rpx;
+        color: $color-ink-ghost;
+        letter-spacing: 1rpx;
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: $space-4;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 12rpx;
+    }
+
+    // ── 两端标签 ──
+    &__axis {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__axis-left {
+        font-size: 22rpx;
+        color: $color-ink-soft;
+        letter-spacing: 0.5rpx;
+        line-height: 1.4;
+        max-width: 44%;
+    }
+
+    &__axis-right-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12rpx;
+        max-width: 50%;
+    }
+
+    &__score {
+        font-size: 28rpx;
+        font-weight: 500;
+        color: #526253;
+        min-width: 24rpx;
+        text-align: center;
+        letter-spacing: -0.5rpx;
+    }
+
+    &__axis-right {
+        font-size: 22rpx;
+        color: $color-ink-soft;
+        letter-spacing: 0.5rpx;
+        line-height: 1.4;
+        text-align: right;
+    }
+
+    // ── 轨道 ──
+    &__track {
+        position: relative;
+        height: 48rpx;
+        display: flex;
+        align-items: center;
         touch-action: none;
     }
 
-    /* =========================
-       bottom labels
-    ========================= */
-
-    &__slider-labels {
-        display: flex;
-
-        justify-content: space-between;
-
-        margin-top: 2rpx;
+    &__track-bg {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 6rpx;
+        border-radius: 999rpx;
+        background: #e8ece8;
     }
 
-    &__slider-low,
-    &__slider-high {
-        font-size: 18rpx;
+    &__track-fill {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        height: 6rpx;
+        transform: translateY(-50%);
+        border-radius: 999rpx;
+        background: #526253;
+        pointer-events: none;
+        transition: width .08s;
+    }
 
-        color: $color-ink-ghost;
+    // 中心刻度线
+    &__track-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2rpx;
+        height: 16rpx;
+        background: rgba(255, 255, 255, .8);
+        border-radius: 2rpx;
+        z-index: 1;
+    }
+
+    // ── 滑块 ──
+    &__thumb {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 36rpx;
+        height: 36rpx;
+        border-radius: 50%;
+        background: #fff;
+        border: 3rpx solid #526253;
+        box-shadow: 0 4rpx 12rpx rgba(82, 98, 83, .28);
+        pointer-events: none;
+        z-index: 2;
     }
 }
 </style>

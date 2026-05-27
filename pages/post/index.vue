@@ -77,10 +77,9 @@ const buildPeopleMap = (list) => {
 const loadPosts = async () => {
     try {
         const [postData, peopleData] = await Promise.all([
-            fetchProjects(),
-            fetchPeople()
+            fetchProjects(currentCity.value),
+            fetchPeople(currentCity.value)
         ])
-        // 仅当云端完全没有数据时才用 mock 兜底（避免 mock 混入真实列表）
         posts.value = postData?.length ? postData : []
         const people = peopleData?.length ? peopleData : []
         peopleMap.value = buildPeopleMap(people)

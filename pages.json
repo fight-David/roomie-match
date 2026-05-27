@@ -60,6 +60,12 @@
 				"navigationBarTitleText": "我的动态",
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/persona/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		}
 	],
 	"globalStyle": {

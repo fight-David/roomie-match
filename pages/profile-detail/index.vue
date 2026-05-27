@@ -58,7 +58,7 @@
 
             <!-- ── 查看模式 ── -->
             <template v-else>
-                <RadarCard :dims="user.dims" />
+                <DimSlider :dims="user.dims" :readonly="true" />
                 <TagLists :loves="user.loves" :limits="user.limits" />
                 <BioCard :bio="user.bio" :user="user" />
             </template>
@@ -97,7 +97,6 @@ import PhotoGallery from './components/PhotoGallery.vue'
 import InlineEditor from './components/InlineEditor.vue'
 import DimSlider from './components/DimSlider.vue'
 import EditTags from './components/EditTags.vue'
-import RadarCard from './components/RadarCard.vue'
 import TagLists from './components/TagLists.vue'
 import BioCard from './components/BioCard.vue'
 import FollowButton from './components/FollowButton.vue'
